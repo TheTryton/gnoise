@@ -48,15 +48,17 @@ vector<float> noise_const_generator_module::compute(const vector<vector4f>& poin
 
 vector<float> noise_const_generator_module::compute(const range1f& range, const precision1& precision) const
 {
-    vector<float> results(precision.dimension_precision<1>(), _const_value);
+    vector<float> results(
+        std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>()),
+        _const_value
+    );
     return results;
 }
 
 vector<float> noise_const_generator_module::compute(const range2f& range, const precision2& precision) const
 {
     vector<float> results(
-        precision.dimension_precision<1>()*
-        precision.dimension_precision<2>(),
+        std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>()),
         _const_value
     );
     return results;
@@ -65,9 +67,7 @@ vector<float> noise_const_generator_module::compute(const range2f& range, const 
 vector<float> noise_const_generator_module::compute(const range3f& range, const precision3& precision) const
 {
     vector<float> results(
-        precision.dimension_precision<1>()*
-        precision.dimension_precision<2>()*
-        precision.dimension_precision<3>(),
+        std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>()),
         _const_value
     );
     return results;
@@ -76,10 +76,7 @@ vector<float> noise_const_generator_module::compute(const range3f& range, const 
 vector<float> noise_const_generator_module::compute(const range4f& range, const precision4& precision) const
 {
     vector<float> results(
-        precision.dimension_precision<1>()*
-        precision.dimension_precision<2>()*
-        precision.dimension_precision<3>()*
-        precision.dimension_precision<4>(),
+        std::accumulate(precision.begin(),precision.end(),1ull,std::multiplies<unsigned long long int>()),
         _const_value
     );
     return results;

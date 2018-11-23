@@ -9,6 +9,7 @@ set(CMAKE_AUTOUIC ON)
 
 set(gnoise_preview_Sources
 	main.cpp
+    WND.hpp
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${gnoise_preview_Sources})

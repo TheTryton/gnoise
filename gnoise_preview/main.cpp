@@ -1,30 +1,16 @@
 #include <CL/cl.hpp>
 #include <iostream>
 #include <chrono>
-#include "include/modules/generators/perlin/noise_perlin_generator_module.hpp"
+#include "WND.hpp"
+
 
 using namespace std;
 
-int main()
+int main(int argc, char** argv)
 {
-    gnoise::noise_perlin_generator_module* mod = new gnoise::noise_perlin_generator_module;
-
-    gnoise::range2f a;
-    gnoise::precision2 b;
-    a.set_dimension_min<1>(0.0f);
-    a.set_dimension_max<1>(1.0f);
-    a.set_dimension_min<2>(0.0f);
-    a.set_dimension_max<2>(1.0f);
-    b.set_dimension_precision<1>(1000);
-    b.set_dimension_precision<2>(1000);
-    mod->configuration().set_computation_target(gnoise::module_computation_target::multi_thread_cpu);
-    mod->configuration().multithreaded_target_configuration()->set_percentage_affinity(1.0f);
-    auto start = chrono::high_resolution_clock::now();
-    auto values = mod->compute(a, b);
-    auto end = chrono::high_resolution_clock::now();
-    cout << (end - start).count() / 1e9 << "s" << endl;
-
-
+    QApplication app(argc,argv);
+    MainWindow wnd;
+    wnd.show();
     /*using namespace cl;
 
     vector<Platform> all_platforms;
@@ -58,6 +44,5 @@ int main()
         }
     }
     */
-    cin.get();
-    return 0;
+    return app.exec();
 }

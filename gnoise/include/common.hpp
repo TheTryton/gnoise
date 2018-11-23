@@ -95,26 +95,26 @@ public:
         return D;
     }
 
-    template<size_t I, std::enable_if_t< 0 < I && I <= D, int> = 0>
+    template<size_t I, std::enable_if_t< I < D, int> = 0>
     float               dimension_min() const
     {
-        return _dim_ranges[I-1].coords[0];
+        return _dim_ranges[I].coords[0];
     }
-    template<size_t I, std::enable_if_t< 0 < I && I <= D, int > = 0>
+    template<size_t I, std::enable_if_t< I < D, int > = 0>
     float               dimension_max() const
     {
-        return _dim_ranges[I - 1].coords[1];
+        return _dim_ranges[I].coords[1];
     }
 
-    template<size_t I, std::enable_if_t< 0 < I && I <= D, int > = 0>
+    template<size_t I, std::enable_if_t< I < D, int > = 0>
     void               set_dimension_min(float value)
     {
-        _dim_ranges[I - 1].coords[0] = value;
+        _dim_ranges[I].coords[0] = value;
     }
-    template<size_t I, std::enable_if_t< 0 < I && I <= D, int > = 0>
+    template<size_t I, std::enable_if_t< I < D, int > = 0>
     void               set_dimension_max(float value)
     {
-        _dim_ranges[I - 1].coords[1] = value;
+        _dim_ranges[I].coords[1] = value;
     }
 private:
     vector2f _dim_ranges[D];
@@ -177,16 +177,16 @@ public:
         return D;
     }
 
-    template<size_t I, std::enable_if_t< 0 < I && I <= D, int > = 0>
+    template<size_t I, std::enable_if_t< I < D, int > = 0>
     unsigned long long int dimension_precision() const
     {
-        return _dim_precision[I - 1];
+        return _dim_precision[I];
     }
 
-    template<size_t I, std::enable_if_t< 0 < I && I <= D, int > = 0>
+    template<size_t I, std::enable_if_t< I < D, int > = 0>
     void               set_dimension_precision(unsigned long long int value)
     {
-        _dim_precision[I - 1] = value;
+        _dim_precision[I] = value;
     }
 private:
     unsigned long long int _dim_precision[D];

@@ -333,7 +333,9 @@ namespace generator_utility
         i &= 0xff;
         i <<= 2;
         array<float, D> coords_vg;
-        std::copy(randoms.begin() + i, randoms.begin() + i + D, coords_vg.begin());
+        std::transform(randoms.begin() + i, randoms.begin() + i + D, coords_vg.begin(), [](double v) {
+            return static_cast<float>(v);
+        });
         array<float, D> coords_vp;
         for (size_t j = 0; j < D; j++)
         {
@@ -398,8 +400,7 @@ namespace generator_utility
         static_assert(D != 0, "noise dimension must be greater than 0");
         static_assert(D <= 4, "dimension higher than 4 has no noise implentation");
 
-        long n = std::inner_product(coords.begin(), coords.end(), generator_noise.begin(), 0.0f);
-        n += generator_seed * seed;
+        long n = std::inner_product(coords.begin(), coords.end(), generator_noise.begin(), generator_seed * seed);
         n &= 0x7fffffff;
         n = (n >> 13) ^ n;
         return (n * (n * n * 60493 + 19990303) + 1376312589) & 0x7fffffff;
@@ -408,6 +409,144 @@ namespace generator_utility
     inline float clamp(float x, float min, float max)
     {
         return std::max(min, std::min(x, max));
+    }
+
+    template<unsigned int D, class MT, class P>
+    inline vector<float> value_points_stcpu(const MT* module, const vector<vectorf<D>>& points, P predicate)
+    {
+        vector<float> values(points.size());
+        std::transform(points.begin(), points.end(), values.begin(), [&module, &predicate](const vectorf<D>& v) {
+            return predicate(module, v);
+        });
+        return values;
+    }
+
+    template<unsigned int D, class MT, class P>
+    inline vector<float> value_points_mtcpu(const MT* module, const vector<vectorf<D>>& points, P predicate)
+    {
+        vector<float> values(points.size());
+        float affinity = module->configuration().multithreaded_target_configuration()->percentage_affinity();
+
+        auto cores_assigned = static_cast<unsigned int>(std::thread::hardware_concurrency()*affinity);
+        if (cores_assigned == 0)
+        {
+            return vector<float>();
+        }
+
+        vector<std::thread> work_threads(cores_assigned);
+        auto div = static_cast<float>(points.size()) / cores_assigned;
+        for (size_t i = 0; i < work_threads.size(); i++)
+        {
+            auto thread_start_it = points.begin() + static_cast<size_t>(div * i);
+            auto thread_end_it = points.begin() + static_cast<size_t>(div * (i + 1));
+            auto thread_start_values_it = values.begin() + static_cast<size_t>(div * i);
+            work_threads[i] = std::thread([thread_start_it, thread_end_it, thread_start_values_it, &values, &points, &module, &predicate]() {
+                std::transform(thread_start_it, thread_end_it, thread_start_values_it, [&module, &predicate](const vectorf<D>& v) {
+                    return predicate(module, v);
+                });
+            });
+        }
+
+        for (auto& thread : work_threads)
+        {
+            thread.join();
+        }
+
+        return values;
+    }
+
+    template<unsigned int D, class MT, class P>
+    inline vector<float> value_range_stcpu(const MT* module, const rangef<D>& range, const precision<D>& precision, P predicate)
+    {
+        unsigned long long int precision_all_dim = std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>());
+        vector<float> values(precision_all_dim);
+        for (unsigned long long int i = 0; i < precision_all_dim; i++)
+        {
+            array<unsigned long long int, D> coord_prec;
+
+            unsigned long long int curr_div = 1;
+
+            for (size_t j = 0; j < D; j++)
+            {
+                coord_prec[j] = (i / curr_div) % precision[j];
+                curr_div *= precision[j];
+            }
+
+            vectorf<D> coords;
+
+            for (size_t j = 0; j < D; j++)
+            {
+                coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j]);
+            }
+
+            for (size_t j = 0; j < D; j++)
+            {
+                coords.coords[j] = generator_utility::interpolate_linear(range[j].coords[0], range[j].coords[1], coords.coords[j]);
+            }
+
+            values[i] = predicate(module, coords);
+        }
+
+        return values;
+    }
+
+    template<unsigned int D, class MT, class P>
+    inline vector<float> value_range_mtcpu(const MT* module, const rangef<D>& range, const precision<D>& precision, P predicate)
+    {
+        unsigned long long int precision_all_dim = std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>());
+        vector<float> values(precision_all_dim);
+
+        auto affinity = module->configuration().multithreaded_target_configuration()->percentage_affinity();
+
+        auto cores_assigned = static_cast<unsigned int>(std::thread::hardware_concurrency()*affinity);
+        if (cores_assigned == 0)
+        {
+            return vector<float>();
+        }
+
+        vector<std::thread> work_threads(cores_assigned);
+        auto div = static_cast<double>(precision_all_dim) / cores_assigned;
+        for (size_t i = 0; i < work_threads.size(); i++)
+        {
+            auto thread_start_it = static_cast<size_t>(div * i);
+            auto thread_end_it = static_cast<size_t>(div * (i + 1));
+
+            work_threads[i] = std::thread([thread_start_it, thread_end_it, &values, &range, &precision, &module, &predicate]() {
+                for (unsigned long long int i = thread_start_it; i < thread_end_it; i++)
+                {
+                    array<unsigned long long int, D> coord_prec;
+
+                    unsigned long long int curr_div = 1;
+
+                    for (size_t j = 0; j < D; j++)
+                    {
+                        coord_prec[j] = (i / curr_div) % precision[j];
+                        curr_div *= precision[j];
+                    }
+
+                    vectorf<D> coords;
+
+                    for (size_t j = 0; j < D; j++)
+                    {
+                        coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j]);
+                    }
+
+                    for (size_t j = 0; j < D; j++)
+                    {
+                        coords.coords[j] = generator_utility::interpolate_linear(range[j].coords[0], range[j].coords[1], coords.coords[j]);
+                    }
+
+                    values[i] = predicate(module, coords);
+                }
+            });
+        }
+
+        for (auto& thread : work_threads)
+        {
+            thread.join();
+        }
+
+        return values;
     }
 }
 
