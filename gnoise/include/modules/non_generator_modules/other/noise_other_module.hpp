@@ -5,7 +5,7 @@
 GNOISE_NAMESPACE_BEGIN
 
 template<size_t I_C>
-class noise_other_module : public noise_non_generator_module_impl<I_C>
+class noise_other_module : public noise_non_generator_module_def_impl_base<I_C>
 {
 protected:
     noise_other_module() noexcept = default;

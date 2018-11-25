@@ -16,7 +16,6 @@ set(gnoise_Sources
 
     include/modules/generators/const/noise_const_generator_module.hpp
     include/modules/generators/const/noise_const_generator_module.cpp
-
     include/modules/generators/perlin/noise_perlin_generator_module.hpp
     include/modules/generators/perlin/noise_perlin_generator_module.cpp
     include/modules/generators/billow/noise_billow_generator_module.hpp
@@ -36,6 +35,14 @@ set(gnoise_Sources
     include/modules/non_generator_modules/noise_non_generator_module.cpp
 
     include/modules/non_generator_modules/combiners/noise_combiner_module.hpp
+
+    include/modules/non_generator_modules/modifiers/noise_modifier_module.hpp
+
+    include/modules/non_generator_modules/modifiers/exponent/noise_exponent_module.hpp
+    include/modules/non_generator_modules/modifiers/exponent/noise_exponent_module.cpp
+    include/modules/non_generator_modules/modifiers/clamp/noise_clamp_module.hpp
+    include/modules/non_generator_modules/modifiers/clamp/noise_clamp_module.cpp
+
     include/modules/non_generator_modules/miscellaneous/noise_miscellaneous_module.hpp
     include/modules/non_generator_modules/modifiers/noise_modifier_module.hpp
     include/modules/non_generator_modules/other/noise_other_module.hpp

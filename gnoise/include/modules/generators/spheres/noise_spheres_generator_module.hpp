@@ -6,27 +6,23 @@ GNOISE_NAMESPACE_BEGIN
 
 inline constexpr float default_spheres_frequency = 1.0f;
 
-class noise_spheres_generator_module : public noise_generator_module
+class noise_spheres_generator_module;
+
+struct spheres
+{
+    template<unsigned int D>
+    inline static float generate(const noise_spheres_generator_module* module, vectorf<D> point);
+};
+
+class noise_spheres_generator_module : public noise_generator_module_def_impl<spheres, noise_spheres_generator_module>
 {
 public:
     noise_spheres_generator_module() noexcept = default;
 public:
-    virtual float                                   compute(const vector1f& point) const override;
-    virtual float                                   compute(const vector2f& point) const override;
-    virtual float                                   compute(const vector3f& point) const override;
-    virtual float                                   compute(const vector4f& point) const override;
-
-    virtual vector<float>                           compute(const vector<vector1f>& points) const override;
-    virtual vector<float>                           compute(const vector<vector2f>& points) const override;
-    virtual vector<float>                           compute(const vector<vector3f>& points) const override;
-    virtual vector<float>                           compute(const vector<vector4f>& points) const override;
-
-    virtual vector<float>                           compute(const range1f& range, const precision1& precision) const override;
-    virtual vector<float>                           compute(const range2f& range, const precision2& precision) const override;
-    virtual vector<float>                           compute(const range3f& range, const precision3& precision) const override;
-    virtual vector<float>                           compute(const range4f& range, const precision4& precision) const override;
-
-    inline float                                    frequency() const;
+    inline float frequency() const
+    {
+        return _frequency;
+    }
 
     void                                            set_frequency(float frequency);
 protected:
@@ -34,5 +30,19 @@ protected:
 private:
     float                                           _frequency = default_spheres_frequency;
 };
+
+template<unsigned int D>
+inline float spheres::generate(const noise_spheres_generator_module* module, vectorf<D> point)
+{
+    std::transform(point.coords, point.coords + D, point.coords, [&module](float v) {
+        return v * module->frequency();
+    });
+
+    auto dist_from_center = sqrtf(std::inner_product(point.coords, point.coords + D, point.coords, 0.0f));
+    auto dist_from_smaller_sphere = dist_from_center - floorf(dist_from_center);
+    auto dist_from_larger_sphere = 1.0f - dist_from_smaller_sphere;
+    auto nearest_dist = std::min(dist_from_smaller_sphere, dist_from_larger_sphere);
+    return 1.0f - (nearest_dist * 4.0f);
+}
 
 GNOISE_NAMESPACE_END

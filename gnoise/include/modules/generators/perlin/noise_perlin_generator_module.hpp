@@ -11,32 +11,73 @@ inline constexpr float default_perlin_persistence = 0.5f;
 inline constexpr noise_quality default_perlin_quality = noise_quality::standard;
 inline constexpr int default_perlin_seed = 0;
 
-class noise_perlin_generator_module : public noise_generator_module
+class noise_perlin_generator_module;
+
+struct perlin
+{
+    template<unsigned int D>
+    inline static float generate(const noise_perlin_generator_module* module, vectorf<D> point)
+    {
+        float value = 0.0f;
+        float signal = 0.0f;
+        float current_persistence = 1.0f;
+        array<float, D> n_point;
+        int seed;
+
+        std::transform(point.coords, point.coords + D, point.coords, [&module](float v) {
+            return v * module->frequency();
+        });
+
+        for (unsigned int current_octave = 0; current_octave < module->octave_count(); current_octave++)
+        {
+            std::transform(point.coords, point.coords + D, n_point.begin(), [&module](float v) {
+                return generator_utility::make_int32_range(v);
+            });
+
+            seed = (module->seed() + current_octave) & 0xffffffff;
+            signal = generator_utility::gradient_coherent_noise<D>(n_point, seed, module->quality());
+            value += signal * current_persistence;
+
+            std::transform(point.coords, point.coords + D, point.coords, [&module](float v) {
+                return v * module->lacunarity();
+            });
+
+            current_persistence *= module->persistence();
+        }
+
+        return value;
+    }
+};
+
+class noise_perlin_generator_module : public noise_generator_module_def_impl<perlin, noise_perlin_generator_module>
 {
 public:
     noise_perlin_generator_module() noexcept = default;
 public:
-    virtual float                                   compute(const vector1f& point) const override;
-    virtual float                                   compute(const vector2f& point) const override;
-    virtual float                                   compute(const vector3f& point) const override;
-    virtual float                                   compute(const vector4f& point) const override;
-
-    virtual vector<float>                           compute(const vector<vector1f>& points) const override;
-    virtual vector<float>                           compute(const vector<vector2f>& points) const override;
-    virtual vector<float>                           compute(const vector<vector3f>& points) const override;
-    virtual vector<float>                           compute(const vector<vector4f>& points) const override;
-
-    virtual vector<float>                           compute(const range1f& range, const precision1& precision) const override;
-    virtual vector<float>                           compute(const range2f& range, const precision2& precision) const override;
-    virtual vector<float>                           compute(const range3f& range, const precision3& precision) const override;
-    virtual vector<float>                           compute(const range4f& range, const precision4& precision) const override;
-
-    inline float                                    frequency() const;
-    inline float                                    lacunarity() const;
-    inline float                                    persistence() const;
-    inline unsigned int                             octave_count() const;
-    inline int                                      seed() const;
-    inline noise_quality                            quality() const;
+    inline float                                    frequency() const
+    {
+        return _frequency;
+    }
+    inline float                                    lacunarity() const
+    {
+        return _lacunarity;
+    }
+    inline float                                    persistence() const
+    {
+        return _persistence;
+    }
+    inline unsigned int                             octave_count() const
+    {
+        return _octave_count;
+    }
+    inline int                                      seed() const
+    {
+        return _seed;
+    }
+    inline noise_quality                            quality() const
+    {
+        return _quality;
+    }
 
     void                                            set_frequency(float frequency);
     void                                            set_lacunarity(float lacunarity);

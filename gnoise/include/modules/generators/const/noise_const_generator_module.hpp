@@ -4,7 +4,7 @@
 
 GNOISE_NAMESPACE_BEGIN
 
-class noise_const_generator_module : public noise_generator_module
+class noise_const_generator_module : public noise_generator_module_base
 {
 public:
     noise_const_generator_module() noexcept = default;
@@ -24,7 +24,10 @@ public:
     virtual vector<float>                           compute(const range3f& range, const precision3& precision) const override;
     virtual vector<float>                           compute(const range4f& range, const precision4& precision) const override;
 
-    float                                           const_value() const;
+    inline float                                           const_value() const
+    {
+        return _const_value;
+    }
     void                                            set_const_value(float value);
 protected:
     virtual void                                    on_configuration_changed() override;

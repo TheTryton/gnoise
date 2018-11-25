@@ -82,11 +82,6 @@ vector<float> noise_const_generator_module::compute(const range4f& range, const 
     return results;
 }
 
-float noise_const_generator_module::const_value() const
-{
-    return _const_value;
-}
-
 void noise_const_generator_module::set_const_value(float value)
 {
     _const_value = value;

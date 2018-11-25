@@ -224,7 +224,7 @@ namespace generator_utility
             xy00 = interpolate_linear(xy00, xy10, coords_mid[0]);
             xy01 = interpolate_linear(xy01, xy11, coords_mid[0]);
             
-            //combined result x * y
+            //generated result x * y
             return interpolate_linear(xy00, xy01, coords_mid[1]);
         }
         if constexpr(D == 3)
@@ -258,7 +258,7 @@ namespace generator_utility
             xyz000 = interpolate_linear(xyz000, xyz010, coords_mid[1]);
             xyz001 = interpolate_linear(xyz001, xyz011, coords_mid[1]);
 
-            //combined result x * y * z
+            //generated result x * y * z
             return interpolate_linear(xyz000, xyz001, coords_mid[2]);
         }
         if constexpr(D == 4)
@@ -313,7 +313,7 @@ namespace generator_utility
             xyzw0000 = interpolate_linear(xyzw0000, xyzw0010, coords_mid[2]);
             xyzw0001 = interpolate_linear(xyzw0001, xyzw0011, coords_mid[2]);
 
-            //combined result x * y * z * w
+            //generated result x * y * z * w
             return interpolate_linear(xyzw0000, xyzw0001, coords_mid[3]);
         }
 
@@ -550,12 +550,262 @@ namespace generator_utility
     }
 }
 
-class noise_generator_module : public noise_module
+class noise_generator_module_base : public noise_module
 {
 protected:
-    noise_generator_module() noexcept = default;
+    noise_generator_module_base() noexcept = default;
 public:
     virtual gnoise::module_type                     module_type() const override;
+};
+
+template<class F, class D>
+class noise_generator_module_def_impl : public noise_generator_module_base
+{
+protected:
+    noise_generator_module_def_impl() noexcept = default;
+public:
+    virtual float                                   compute(const vector1f& point) const override
+    {
+        return F::generate(reinterpret_cast<const D*>(this), point);
+    }
+    virtual float                                   compute(const vector2f& point) const override
+    {
+        return F::generate(reinterpret_cast<const D*>(this), point);
+    }
+    virtual float                                   compute(const vector3f& point) const override
+    {
+        return F::generate(reinterpret_cast<const D*>(this), point);
+    }
+    virtual float                                   compute(const vector4f& point) const override
+    {
+        return F::generate(reinterpret_cast<const D*>(this), point);
+    }
+
+    virtual vector<float>                           compute(const vector<vector1f>& points) const override
+    {
+        if (points.size() == 0)
+        {
+            return vector<float>();
+        }
+
+        switch (_configuration.computation_target())
+        {
+        case module_computation_target::single_thread_cpu:
+        {
+            return generator_utility::value_points_stcpu(reinterpret_cast<const D*>(this), points, F::generate<1>);
+        }
+        break;
+        case module_computation_target::multi_thread_cpu:
+        {
+            return generator_utility::value_points_mtcpu(reinterpret_cast<const D*>(this), points, F::generate<1>);
+        }
+        break;
+        case module_computation_target::open_cl:
+        {
+
+        }
+        break;
+        }
+
+        return vector<float>();
+    }
+    virtual vector<float>                           compute(const vector<vector2f>& points) const override
+    {
+        if (points.size() == 0)
+        {
+            return vector<float>();
+        }
+
+        switch (_configuration.computation_target())
+        {
+        case module_computation_target::single_thread_cpu:
+        {
+            return generator_utility::value_points_stcpu(reinterpret_cast<const D*>(this), points, F::generate<2>);
+        }
+        break;
+        case module_computation_target::multi_thread_cpu:
+        {
+            return generator_utility::value_points_mtcpu(reinterpret_cast<const D*>(this), points, F::generate<2>);
+        }
+        break;
+        case module_computation_target::open_cl:
+        {
+
+        }
+        break;
+        }
+
+        return vector<float>();
+    }
+    virtual vector<float>                           compute(const vector<vector3f>& points) const override
+    {
+        if (points.size() == 0)
+        {
+            return vector<float>();
+        }
+
+        switch (_configuration.computation_target())
+        {
+        case module_computation_target::single_thread_cpu:
+        {
+            return generator_utility::value_points_stcpu(reinterpret_cast<const D*>(this), points, F::generate<3>);
+        }
+        break;
+        case module_computation_target::multi_thread_cpu:
+        {
+            return generator_utility::value_points_mtcpu(reinterpret_cast<const D*>(this), points, F::generate<3>);
+        }
+        break;
+        case module_computation_target::open_cl:
+        {
+
+        }
+        break;
+        }
+
+        return vector<float>();
+    }
+    virtual vector<float>                           compute(const vector<vector4f>& points) const override 
+    {
+        if (points.size() == 0)
+        {
+            return vector<float>();
+        }
+
+        switch (_configuration.computation_target())
+        {
+        case module_computation_target::single_thread_cpu:
+        {
+            return generator_utility::value_points_stcpu(reinterpret_cast<const D*>(this), points, F::generate<4>);
+        }
+        break;
+        case module_computation_target::multi_thread_cpu:
+        {
+            return generator_utility::value_points_mtcpu(reinterpret_cast<const D*>(this), points, F::generate<4>);
+        }
+        break;
+        case module_computation_target::open_cl:
+        {
+
+        }
+        break;
+        }
+
+        return vector<float>();
+    }
+
+    virtual vector<float>                           compute(const range1f& range, const precision1& precision) const override
+    {
+        if (std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>()) == 0)
+        {
+            return vector<float>();
+        }
+
+        switch (_configuration.computation_target())
+        {
+        case module_computation_target::single_thread_cpu:
+        {
+            return generator_utility::value_range_stcpu(reinterpret_cast<const D*>(this), range, precision, F::generate<1>);
+        }
+        break;
+        case module_computation_target::multi_thread_cpu:
+        {
+            return generator_utility::value_range_mtcpu(reinterpret_cast<const D*>(this), range, precision, F::generate<1>);
+        }
+        break;
+        case module_computation_target::open_cl:
+        {
+
+        }
+        break;
+        }
+
+        return vector<float>();
+    }
+    virtual vector<float>                           compute(const range2f& range, const precision2& precision) const override
+    {
+        if (std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>()) == 0)
+        {
+            return vector<float>();
+        }
+
+        switch (_configuration.computation_target())
+        {
+        case module_computation_target::single_thread_cpu:
+        {
+            return generator_utility::value_range_stcpu(reinterpret_cast<const D*>(this), range, precision, F::generate<2>);
+        }
+        break;
+        case module_computation_target::multi_thread_cpu:
+        {
+            return generator_utility::value_range_mtcpu(reinterpret_cast<const D*>(this), range, precision, F::generate<2>);
+        }
+        break;
+        case module_computation_target::open_cl:
+        {
+
+        }
+        break;
+        }
+
+        return vector<float>();
+    }
+    virtual vector<float>                           compute(const range3f& range, const precision3& precision) const override
+    {
+        if (std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>()) == 0)
+        {
+            return vector<float>();
+        }
+
+        switch (_configuration.computation_target())
+        {
+        case module_computation_target::single_thread_cpu:
+        {
+            return generator_utility::value_range_stcpu(reinterpret_cast<const D*>(this), range, precision, F::generate<3>);
+        }
+        break;
+        case module_computation_target::multi_thread_cpu:
+        {
+            return generator_utility::value_range_mtcpu(reinterpret_cast<const D*>(this), range, precision, F::generate<3>);
+        }
+        break;
+        case module_computation_target::open_cl:
+        {
+
+        }
+        break;
+        }
+
+        return vector<float>();
+    }
+    virtual vector<float>                           compute(const range4f& range, const precision4& precision) const override
+    {
+        if (std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>()) == 0)
+        {
+            return vector<float>();
+        }
+
+        switch (_configuration.computation_target())
+        {
+        case module_computation_target::single_thread_cpu:
+        {
+            return generator_utility::value_range_stcpu(reinterpret_cast<const D*>(this), range, precision, F::generate<4>);
+        }
+        break;
+        case module_computation_target::multi_thread_cpu:
+        {
+            return generator_utility::value_range_mtcpu(reinterpret_cast<const D*>(this), range, precision, F::generate<4>);
+        }
+        break;
+        case module_computation_target::open_cl:
+        {
+
+        }
+        break;
+        }
+
+        return vector<float>();
+    }
 };
 
 GNOISE_NAMESPACE_END
