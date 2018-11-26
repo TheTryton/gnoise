@@ -9,6 +9,8 @@
 #include "include/modules/generators/spheres/noise_spheres_generator_module.hpp"
 #include "include/modules/generators/cylinders/noise_cylinders_generator_module.hpp"
 #include "include/modules/non_generator_modules/combiners/noise_combiner_module.hpp"
+#include "include/modules/non_generator_modules/transformers/displace/noise_displace_module.hpp"
+#include "include/modules/non_generator_modules/transformers/turbulence/noise_turbulence_module.hpp"
 
 class Image : public QWidget
 {
@@ -45,7 +47,7 @@ public:
         auto button_layout = new QHBoxLayout();
         setLayout(root_layout);
         root_layout->addLayout(button_layout);
-        auto button_perlin = new QPushButton("Perlin");
+        auto button_perlin = new QPushButton("Compute");
         button_layout->addWidget(button_perlin);
         auto image_rect = new QScrollArea();
         root_layout->addWidget(image_rect);
@@ -54,23 +56,27 @@ public:
         QObject::connect(button_perlin, &QPushButton::released, this, [image]() {
             gnoise::noise_perlin_generator_module mod0;
             gnoise::noise_ridged_multifractal_generator_module mod1;
-            gnoise::noise_max_module mod2;
+            gnoise::noise_voronoi_generator_module mod3;
+            gnoise::noise_turbulence_module mod2;
             gnoise::range2f a;
             gnoise::precision2 b;
             a.set_dimension_min<0>(0.0f);
             a.set_dimension_max<0>(10.0f);
             a.set_dimension_min<1>(0.0f);
             a.set_dimension_max<1>(10.0f);
-            b.set_dimension_precision<0>(5000);
-            b.set_dimension_precision<1>(5000);
+            b.set_dimension_precision<0>(4000);
+            b.set_dimension_precision<1>(4000);
             mod0.configuration().set_computation_target(gnoise::module_computation_target::multi_thread_cpu);
             mod0.configuration().multithreaded_target_configuration()->set_percentage_affinity(1.0f);
             mod1.configuration().set_computation_target(gnoise::module_computation_target::multi_thread_cpu);
             mod1.configuration().multithreaded_target_configuration()->set_percentage_affinity(1.0f);
             mod2.configuration().set_computation_target(gnoise::module_computation_target::multi_thread_cpu);
             mod2.configuration().multithreaded_target_configuration()->set_percentage_affinity(1.0f);
-            mod2.set_input_module(0, &mod0);
-            mod2.set_input_module(1, &mod1);
+            mod3.configuration().set_computation_target(gnoise::module_computation_target::multi_thread_cpu);
+            mod3.configuration().multithreaded_target_configuration()->set_percentage_affinity(1.0f);
+            mod2.set_input_module(0, &mod3);
+            mod2.set_input_module(1, &mod0);
+            mod2.set_input_module(2, &mod1);
             auto values = mod2.compute(a, b);
 
             QImage pm = QImage((int)b.dimension_precision<0>(), (int)b.dimension_precision<1>(), QImage::Format::Format_RGBA8888);

@@ -38,16 +38,26 @@ set(gnoise_Sources
 
     include/modules/non_generator_modules/modifiers/noise_modifier_module.hpp
 
+    include/modules/non_generator_modules/modifiers/clamp/noise_clamp_module.hpp
+    include/modules/non_generator_modules/modifiers/clamp/noise_clamp_module.cpp   
     include/modules/non_generator_modules/modifiers/exponent/noise_exponent_module.hpp
     include/modules/non_generator_modules/modifiers/exponent/noise_exponent_module.cpp
-    include/modules/non_generator_modules/modifiers/clamp/noise_clamp_module.hpp
-    include/modules/non_generator_modules/modifiers/clamp/noise_clamp_module.cpp
+    include/modules/non_generator_modules/modifiers/base/noise_base_module.hpp
+    include/modules/non_generator_modules/modifiers/base/noise_base_module.cpp
+    include/modules/non_generator_modules/modifiers/scale_bias/noise_scale_bias_module.hpp
+    include/modules/non_generator_modules/modifiers/scale_bias/noise_scale_bias_module.cpp
 
     include/modules/non_generator_modules/miscellaneous/noise_miscellaneous_module.hpp
     include/modules/non_generator_modules/modifiers/noise_modifier_module.hpp
     include/modules/non_generator_modules/other/noise_other_module.hpp
     include/modules/non_generator_modules/selectors/noise_selector_module.hpp
+
     include/modules/non_generator_modules/transformers/noise_transformer_module.hpp
+
+    include/modules/non_generator_modules/transformers/displace/noise_displace_module.hpp
+    include/modules/non_generator_modules/transformers/displace/noise_displace_module.cpp
+    include/modules/non_generator_modules/transformers/turbulence/noise_turbulence_module.hpp
+    include/modules/non_generator_modules/transformers/turbulence/noise_turbulence_module.cpp
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${gnoise_Sources})

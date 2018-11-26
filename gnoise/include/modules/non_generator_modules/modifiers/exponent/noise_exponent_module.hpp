@@ -18,10 +18,18 @@ class noise_exponent_module : public noise_modifier_module_base<1, exponent, noi
 public:
     noise_exponent_module() noexcept = default;
 public:
-    inline float                                    exponent() const;
+    inline float                                    exponent() const
+    {
+        return _exponent;
+    }
     void                                            set_exponent(float exponent);
 private:
     float                                           _exponent = default_exponent;
 };
+
+inline float exponent::apply(const noise_exponent_module * module, float x)
+{
+    return std::pow(x, module->exponent());
+}
 
 GNOISE_NAMESPACE_END
