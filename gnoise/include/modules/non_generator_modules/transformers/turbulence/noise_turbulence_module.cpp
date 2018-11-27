@@ -1,4 +1,5 @@
 #include "noise_turbulence_module.hpp"
+#include "..\linear_transformer\rotate_point\noise_rotate_point_module.hpp"
 
 GNOISE_NAMESPACE_BEGIN
 

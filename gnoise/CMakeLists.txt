@@ -58,6 +58,15 @@ set(gnoise_Sources
     include/modules/non_generator_modules/transformers/displace/noise_displace_module.cpp
     include/modules/non_generator_modules/transformers/turbulence/noise_turbulence_module.hpp
     include/modules/non_generator_modules/transformers/turbulence/noise_turbulence_module.cpp
+    
+    include/modules/non_generator_modules/transformers/linear_transformer/noise_linear_transformer_module.hpp
+
+    include/modules/non_generator_modules/transformers/linear_transformer/rotate_point/noise_rotate_point_module.hpp
+    include/modules/non_generator_modules/transformers/linear_transformer/rotate_point/noise_rotate_point_module.cpp
+    include/modules/non_generator_modules/transformers/linear_transformer/translate_point/noise_translate_point_module.hpp
+    include/modules/non_generator_modules/transformers/linear_transformer/translate_point/noise_translate_point_module.cpp
+    include/modules/non_generator_modules/transformers/linear_transformer/scale_point/noise_scale_point_module.hpp
+    include/modules/non_generator_modules/transformers/linear_transformer/scale_point/noise_scale_point_module.cpp
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${gnoise_Sources})

@@ -11,6 +11,8 @@
 #include "include/modules/non_generator_modules/combiners/noise_combiner_module.hpp"
 #include "include/modules/non_generator_modules/transformers/displace/noise_displace_module.hpp"
 #include "include/modules/non_generator_modules/transformers/turbulence/noise_turbulence_module.hpp"
+#include "include/modules/non_generator_modules/transformers/linear_transformer/rotate_point/noise_rotate_point_module.hpp"
+#include "include/modules/non_generator_modules/transformers/linear_transformer/scale_point/noise_scale_point_module.hpp"
 
 class Image : public QWidget
 {
@@ -58,14 +60,15 @@ public:
             gnoise::noise_ridged_multifractal_generator_module mod1;
             gnoise::noise_voronoi_generator_module mod3;
             gnoise::noise_turbulence_module mod2;
+            gnoise::noise_scale_point_module mod4;
             gnoise::range2f a;
             gnoise::precision2 b;
             a.set_dimension_min<0>(0.0f);
             a.set_dimension_max<0>(10.0f);
             a.set_dimension_min<1>(0.0f);
             a.set_dimension_max<1>(10.0f);
-            b.set_dimension_precision<0>(4000);
-            b.set_dimension_precision<1>(4000);
+            b.set_dimension_precision<0>(2000);
+            b.set_dimension_precision<1>(2000);
             mod0.configuration().set_computation_target(gnoise::module_computation_target::multi_thread_cpu);
             mod0.configuration().multithreaded_target_configuration()->set_percentage_affinity(1.0f);
             mod1.configuration().set_computation_target(gnoise::module_computation_target::multi_thread_cpu);
@@ -74,10 +77,15 @@ public:
             mod2.configuration().multithreaded_target_configuration()->set_percentage_affinity(1.0f);
             mod3.configuration().set_computation_target(gnoise::module_computation_target::multi_thread_cpu);
             mod3.configuration().multithreaded_target_configuration()->set_percentage_affinity(1.0f);
+            mod4.configuration().set_computation_target(gnoise::module_computation_target::multi_thread_cpu);
+            mod4.configuration().multithreaded_target_configuration()->set_percentage_affinity(1.0f);
             mod2.set_input_module(0, &mod3);
             mod2.set_input_module(1, &mod0);
             mod2.set_input_module(2, &mod1);
-            auto values = mod2.compute(a, b);
+            mod4.set_input_module(0, &mod2);
+            mod4.set_scale_x(100.0f);
+            mod4.set_scale_y(100.0f);
+            auto values = mod4.compute(a, b);
 
             QImage pm = QImage((int)b.dimension_precision<0>(), (int)b.dimension_precision<1>(), QImage::Format::Format_RGBA8888);
 
