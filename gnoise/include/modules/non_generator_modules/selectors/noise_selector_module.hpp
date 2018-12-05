@@ -4,16 +4,7 @@
 
 GNOISE_NAMESPACE_BEGIN
 
-template<size_t I_C>
-class noise_selector_module : public noise_non_generator_module_def_impl_base<I_C>
-{
-protected:
-    noise_selector_module() noexcept = default;
-public:
-    virtual gnoise::module_type                     module_type() const override
-    {
-        return gnoise::module_type::selector;
-    }
-};
+template<size_t I_C, class F, class D>
+using noise_selector_module_base = noise_non_generator_module_def_impl<I_C, F, D, module_type::selector>;
 
 GNOISE_NAMESPACE_END

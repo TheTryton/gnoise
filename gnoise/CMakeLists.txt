@@ -50,7 +50,6 @@ set(gnoise_Sources
     include/modules/non_generator_modules/miscellaneous/noise_miscellaneous_module.hpp
     include/modules/non_generator_modules/modifiers/noise_modifier_module.hpp
     include/modules/non_generator_modules/other/noise_other_module.hpp
-    include/modules/non_generator_modules/selectors/noise_selector_module.hpp
 
     include/modules/non_generator_modules/transformers/noise_transformer_module.hpp
 
@@ -67,6 +66,13 @@ set(gnoise_Sources
     include/modules/non_generator_modules/transformers/linear_transformer/translate_point/noise_translate_point_module.cpp
     include/modules/non_generator_modules/transformers/linear_transformer/scale_point/noise_scale_point_module.hpp
     include/modules/non_generator_modules/transformers/linear_transformer/scale_point/noise_scale_point_module.cpp
+
+    include/modules/non_generator_modules/selectors/noise_selector_module.hpp
+    include/modules/non_generator_modules/selectors/select/noise_select_module.hpp
+    include/modules/non_generator_modules/selectors/select/noise_select_module.cpp
+    include/modules/non_generator_modules/selectors/blend/noise_blend_module.hpp
+    include/modules/non_generator_modules/selectors/blend/noise_blend_module.cpp
+
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${gnoise_Sources})

@@ -58,7 +58,7 @@ public:
         QObject::connect(button_perlin, &QPushButton::released, this, [image]() {
             gnoise::noise_perlin_generator_module mod0;
             gnoise::noise_ridged_multifractal_generator_module mod1;
-            gnoise::noise_voronoi_generator_module mod3;
+            gnoise::noise_billow_generator_module mod3;
             gnoise::noise_turbulence_module mod2;
             gnoise::noise_scale_point_module mod4;
             gnoise::range2f a;
@@ -83,8 +83,8 @@ public:
             mod2.set_input_module(1, &mod0);
             mod2.set_input_module(2, &mod1);
             mod4.set_input_module(0, &mod2);
-            mod4.set_scale_x(100.0f);
-            mod4.set_scale_y(100.0f);
+            mod4.set_scale_x(10.0f);
+            mod4.set_scale_y(10.0f);
             auto values = mod4.compute(a, b);
 
             QImage pm = QImage((int)b.dimension_precision<0>(), (int)b.dimension_precision<1>(), QImage::Format::Format_RGBA8888);
