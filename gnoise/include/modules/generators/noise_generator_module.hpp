@@ -602,7 +602,7 @@ public:
         break;
         case module_computation_target::open_cl:
         {
-
+            return compute_gpu_points(points);
         }
         break;
         }
@@ -630,7 +630,7 @@ public:
         break;
         case module_computation_target::open_cl:
         {
-
+            return compute_gpu_points(points);
         }
         break;
         }
@@ -658,7 +658,7 @@ public:
         break;
         case module_computation_target::open_cl:
         {
-
+            return compute_gpu_points(points);
         }
         break;
         }
@@ -686,7 +686,7 @@ public:
         break;
         case module_computation_target::open_cl:
         {
-
+            return compute_gpu_points(points);
         }
         break;
         }
@@ -806,6 +806,202 @@ public:
 
         return vector<float>();
     }
+protected:
+    virtual void                                    on_configuration_changed() override
+    {
+        if(configuration().computation_target() == module_computation_target::gpu)
+        {
+            if(auto gpu_config = configuration().accelerated_target_configuration())
+            {
+                auto target_device = gpu_config->target();
+                if(target_device.getInfo<CL_DEVICE_AVAILABLE>())
+                {
+                    _gpu_context = cl::Context(target_device);
+                    _gpu_command_queue = cl::CommandQueue(_gpu_context, target_device);
+                    F::create_kernels(
+                        _gpu_context, target_device,
+                        _gpu_program_kernels_points,
+                        _gpu_program_kernels_ranges
+                    );
+                }
+            }
+        }
+    }
+private:
+    template<unsigned int DIM>
+    inline vector<float>                            compute_gpu_points(const vector<vectorf<DIM>>& points) const
+    {
+        auto module_config_i = F::get_module_config_i(reinterpret_cast<const D*>(this));
+        auto module_config_f = F::get_module_config_f(reinterpret_cast<const D*>(this));
+
+        //passing settings to gpu
+
+        cl::Buffer buffer_randoms(context, CL_MEM_READ_ONLY,
+            sizeof(float) * generator_utility::randoms.size()
+        );
+        cl::Buffer buffer_module_config_f(context, CL_MEM_READ_ONLY,
+            sizeof(float) * module_config_f.size()
+        );
+        cl::Buffer buffer_module_config_i(context, CL_MEM_READ_ONLY,
+            sizeof(int) * module_config_i.size()
+        );
+
+        _gpu_command_queue.enqueueWriteBuffer(buffer_randoms, CL_FALSE, 0,
+            sizeof(float) * generator_utility::randoms.size(),
+            generator_utility.data()
+        );
+        _gpu_command_queue.enqueueWriteBuffer(buffer_module_config_f, CL_FALSE, 0,
+            sizeof(float) * module_config_f.size(),
+            module_config_f.data()
+        );
+        _gpu_command_queue.enqueueWriteBuffer(buffer_module_config_i, CL_FALSE, 0,
+            sizeof(int) * module_config_i.size(),
+            module_config_i.data()
+        );
+
+        //result and points buffers
+
+        cl::Buffer buffer_results(context, CL_MEM_WRITE_ONLY,
+            sizeof(float) * points.size()
+        );
+        cl::Buffer buffer_points(context, CL_MEM_READ_ONLY,
+            sizeof(vectorf<DIM>) * points.size()
+        );
+
+        _gpu_command_queue.enqueueWriteBuffer(buffer_points, CL_FALSE, 0,
+            sizeof(vectorf<DIM>) * buffer_points.size(),
+            buffer_points.data()
+        );
+
+        //wait for transfer to gpu to end
+
+        _gpu_command_queue.finish();
+
+        //set buffers to kernel arguments
+
+        auto& kernel = _gpu_program_kernels_points[DIM - 1];
+
+        kernel.setArg(0, buffer_results);
+        kernel.setArg(1, buffer_points);
+        kernel.setArg(2, buffer_randoms);
+        kernel.setArg(3, buffer_module_config_f);
+        kernel.setArg(4, buffer_module_config_i);
+
+        //start computation
+
+        _gpu_command_queue.enqueueNDRangeKernel(
+            kernel,
+            cl::NullRange,
+            cl::NDRange(points.size()),
+            cl::NDRange(32)
+        );
+
+        vector<float> results(points.size());
+
+        _gpu_command_queue.enqueueReadBuffer(buffer_results, CL_TRUE, 0,
+            sizeof(float) * points.size(),
+            results.data()
+        );
+
+        _gpu_command_queue.finish();
+
+        return results;
+    }
+    template<unsigned int DIM>
+    inline vector<float>                            compute_gpu_points(const rangef<DIM>& range, const precision<DIM>& precision) const
+    {
+        auto module_config_i = F::get_module_config_i(reinterpret_cast<const D*>(this));
+        auto module_config_f = F::get_module_config_f(reinterpret_cast<const D*>(this));
+
+        //passing settings to gpu
+
+        cl::Buffer buffer_randoms(context, CL_MEM_READ_ONLY,
+            sizeof(float) * generator_utility::randoms.size()
+        );
+        cl::Buffer buffer_module_config_f(context, CL_MEM_READ_ONLY,
+            sizeof(float) * module_config_f.size()
+        );
+        cl::Buffer buffer_module_config_i(context, CL_MEM_READ_ONLY,
+            sizeof(int) * module_config_i.size()
+        );
+
+        _gpu_command_queue.enqueueWriteBuffer(buffer_randoms, CL_FALSE, 0,
+            sizeof(float) * generator_utility::randoms.size(),
+            generator_utility.data()
+        );
+        _gpu_command_queue.enqueueWriteBuffer(buffer_module_config_f, CL_FALSE, 0,
+            sizeof(float) * module_config_f.size(),
+            module_config_f.data()
+        );
+        _gpu_command_queue.enqueueWriteBuffer(buffer_module_config_i, CL_FALSE, 0,
+            sizeof(int) * module_config_i.size(),
+            module_config_i.data()
+        );
+
+        //result and points buffers
+
+        auto results_count = std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>());
+
+        cl::Buffer buffer_results(context, CL_MEM_WRITE_ONLY,
+            sizeof(float) * results_count
+        );
+        cl::Buffer buffer_range(context, CL_MEM_READ_ONLY,
+            sizeof(rangef<DIM>)
+        );
+        cl::Buffer buffer_precision(context, CL_MEM_READ_ONLY,
+            sizeof(gnoise::precision<DIM>)
+        );
+
+        _gpu_command_queue.enqueueWriteBuffer(buffer_range, CL_FALSE, 0,
+            sizeof(rangef<DIM>),
+            range.data()
+        );
+
+        _gpu_command_queue.enqueueWriteBuffer(buffer_range, CL_FALSE, 0,
+            sizeof(gnoise::precision<DIM>),
+            precision.data()
+        );
+
+        //wait for transfer to gpu to end
+
+        _gpu_command_queue.finish();
+
+        //set buffers to kernel arguments
+
+        auto& kernel = _gpu_program_kernels_ranges[DIM - 1];
+
+        kernel.setArg(0, buffer_results);
+        kernel.setArg(1, buffer_range);
+        kernel.setArg(2, buffer_precision);
+        kernel.setArg(3, buffer_randoms);
+        kernel.setArg(4, buffer_module_config_f);
+        kernel.setArg(5, buffer_module_config_i);
+
+        //start computation
+
+        _gpu_command_queue.enqueueNDRangeKernel(
+            kernel,
+            cl::NullRange,
+            cl::NDRange(results_count),
+            cl::NDRange(32)
+        );
+
+        vector<float> results(results_count);
+
+        _gpu_command_queue.enqueueReadBuffer(buffer_results, CL_TRUE, 0,
+            sizeof(float) * results_count,
+            results.data()
+        );
+
+        _gpu_command_queue.finish();
+
+        return results;
+    }
+private:
+    cl::Context                                     _gpu_context;
+    array<cl::Kernel, 4>                            _gpu_program_kernels_points;
+    array<cl::Kernel, 4>                            _gpu_program_kernels_ranges;
+    mutable cl::CommandQueue                        _gpu_command_queue;
 };
 
 GNOISE_NAMESPACE_END

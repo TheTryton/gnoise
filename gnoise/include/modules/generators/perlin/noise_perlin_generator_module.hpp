@@ -13,8 +13,11 @@ inline constexpr int default_perlin_seed = 0;
 
 class noise_perlin_generator_module;
 
-struct perlin
+class perlin
 {
+private:
+    static array<std::string, 8> _code;
+public:
     template<unsigned int D>
     inline static float generate(const noise_perlin_generator_module* module, vectorf<D> point)
     {
@@ -47,6 +50,15 @@ struct perlin
 
         return value;
     }
+
+    inline static void create_kernels(
+        const cl::Context& context, const cl::CommandQueue& queue,
+        array<cl::Kernel, 4>& kernel_points,
+        array<cl::Kernel, 4>& kernel_ranges
+    );
+
+    inline static array<float, 3> get_module_config_f(const noise_perlin_generator_module* module);
+    inline static array<int, 3> get_module_config_i(const noise_perlin_generator_module* module);
 };
 
 class noise_perlin_generator_module : public noise_generator_module_def_impl<perlin, noise_perlin_generator_module>

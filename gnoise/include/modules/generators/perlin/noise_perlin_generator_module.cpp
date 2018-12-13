@@ -2,6 +2,16 @@
 
 GNOISE_NAMESPACE_BEGIN
 
+inline array<float, 3> perlin::get_module_config_f(const noise_perlin_generator_module* module)
+{
+    return { module->frequency(), module->lacunarity(), module->persistence() };
+}
+
+inline array<int, 3> perlin::get_module_config_i(const noise_perlin_generator_module* module)
+{
+    return { static_cast<int>(module->octave_count()), module->seed(), static_cast<int>(module->quality())};
+}
+
 void noise_perlin_generator_module::set_frequency(float frequency)
 {
     _frequency = frequency;
