@@ -1,6 +1,6 @@
 #pragma once
 
-#include <CL/cl.hpp>
+#include <CL/cl.h>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -9,6 +9,8 @@
 #include <numeric>
 #include <thread>
 #include <array>
+#include <string>
+#include <string_view>
 
 #undef min
 #undef max
@@ -70,6 +72,16 @@ public:
         std::copy(other._dim_ranges, other._dim_ranges + std::min(D, _D), _dim_ranges);
     }
 public:
+    constexpr const vector2f* data() const
+    {
+        return _dim_ranges;
+    }
+
+    constexpr vector2f* data()
+    {
+        return _dim_ranges;
+    }
+
     constexpr const vector2f* begin() const
     {
         return _dim_ranges;
@@ -152,6 +164,16 @@ public:
         std::copy(other._dim_precision, other._dim_precision + std::min(D, _D), _dim_precision);
     }
 public:
+    constexpr const unsigned long long int* data() const
+    {
+        return _dim_precision;
+    }
+
+    constexpr unsigned long long int* data()
+    {
+        return _dim_precision;
+    }
+
     constexpr const unsigned long long int* begin() const
     {
         return _dim_precision;
@@ -202,7 +224,7 @@ using precision2 = precision<2>;
 using precision3 = precision<3>;
 using precision4 = precision<4>;
 
-using accelerated_computation_target = cl::Device;
+using accelerated_computation_target = cl_device_id;
 template<class T>
 using optional = std::optional<T>;
 template<class T>

@@ -1,6 +1,215 @@
 #include "noise_billow_generator_module.hpp"
+#include "noise_billow_generator_module_gpu_code.hpp"
+
+#include <iostream>
 
 GNOISE_NAMESPACE_BEGIN
+
+void billow::create_kernels(
+    cl_device_id target_device, const cl_context& context,
+    array<cl_program, 4>& program_points, array<cl_kernel, 4>& kernel_points,
+    array<cl_program, 4>& program_ranges, array<cl_kernel, 4>& kernel_ranges
+)
+{
+    //1D
+    {
+        //points
+        {
+            std::string billow1Dpoints = std::string(gpu_generator_utility_gradient_noise_1D) + std::string(billow_value_point_1D) + std::string(billow_points_1D);
+            const char* billow1D_code_data = billow1Dpoints.data();
+            size_t billow1D_code_data_size = billow1Dpoints.size();
+            program_points[0] = clCreateProgramWithSource(context, 1, &billow1D_code_data, &billow1D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_points[0], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_points[0], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_points[0], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_points[0]);
+                program_points[0] = nullptr;
+            }
+            kernel_points[0] = clCreateKernel(program_points[0], "generate_billow_points_1D", nullptr);
+        }
+        //ranges
+        {
+            std::string billow1Dranges = std::string(gpu_generator_utility_gradient_noise_1D) + std::string(billow_value_point_1D) + std::string(billow_ranges_1D);
+            const char* billow1D_code_data = billow1Dranges.data();
+            size_t billow1D_code_data_size = billow1Dranges.size();
+            program_ranges[0] = clCreateProgramWithSource(context, 1, &billow1D_code_data, &billow1D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_ranges[0], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_ranges[0], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_ranges[0], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_ranges[0]);
+                program_ranges[0] = nullptr;
+            }
+            kernel_ranges[0] = clCreateKernel(program_ranges[0], "generate_billow_ranges_1D", nullptr);
+        }
+    }
+    //2D
+    {
+        //points
+        {
+            std::string billow2Dpoints = std::string(gpu_generator_utility_gradient_noise_2D) + std::string(billow_value_point_2D) + std::string(billow_points_2D);
+            const char* billow2D_code_data = billow2Dpoints.data();
+            size_t billow2D_code_data_size = billow2Dpoints.size();
+            program_points[1] = clCreateProgramWithSource(context, 1, &billow2D_code_data, &billow2D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_points[1], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_points[1], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_points[1], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_points[1]);
+                program_points[1] = nullptr;
+            }
+            kernel_points[1] = clCreateKernel(program_points[1], "generate_billow_points_2D", nullptr);
+        }
+        //ranges
+        {
+            std::string billow2Dranges = std::string(gpu_generator_utility_gradient_noise_2D) + std::string(billow_value_point_2D) + std::string(billow_ranges_2D);
+            const char* billow2D_code_data = billow2Dranges.data();
+            size_t billow2D_code_data_size = billow2Dranges.size();
+            program_ranges[1] = clCreateProgramWithSource(context, 1, &billow2D_code_data, &billow2D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_ranges[1], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_ranges[1], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_ranges[1], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_ranges[1]);
+                program_ranges[1] = nullptr;
+            }
+            kernel_ranges[1] = clCreateKernel(program_ranges[1], "generate_billow_ranges_2D", nullptr);
+        }
+    }
+    //3D
+    {
+        //points
+        {
+            std::string billow3Dpoints = std::string(gpu_generator_utility_gradient_noise_3D) + std::string(billow_value_point_3D) + std::string(billow_points_3D);
+            const char* billow3D_code_data = billow3Dpoints.data();
+            size_t billow3D_code_data_size = billow3Dpoints.size();
+            program_points[2] = clCreateProgramWithSource(context, 1, &billow3D_code_data, &billow3D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_points[2], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_points[2], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_points[2], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_points[2]);
+                program_points[2] = nullptr;
+            }
+            kernel_points[2] = clCreateKernel(program_points[2], "generate_billow_points_3D", nullptr);
+        }
+        //ranges
+        {
+            std::string billow3Dranges = std::string(gpu_generator_utility_gradient_noise_3D) + std::string(billow_value_point_3D) + std::string(billow_ranges_3D);
+            const char* billow3D_code_data = billow3Dranges.data();
+            size_t billow3D_code_data_size = billow3Dranges.size();
+            program_ranges[2] = clCreateProgramWithSource(context, 1, &billow3D_code_data, &billow3D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_ranges[2], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_ranges[2], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_ranges[2], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_ranges[2]);
+                program_ranges[2] = nullptr;
+            }
+            kernel_ranges[2] = clCreateKernel(program_ranges[2], "generate_billow_ranges_3D", nullptr);
+        }
+    }
+    //4D
+    {
+        //points
+        {
+            std::string billow4Dpoints = std::string(gpu_generator_utility_gradient_noise_4D) + std::string(billow_value_point_4D) + std::string(billow_points_4D);
+            const char* billow4D_code_data = billow4Dpoints.data();
+            size_t billow4D_code_data_size = billow4Dpoints.size();
+            program_points[3] = clCreateProgramWithSource(context, 1, &billow4D_code_data, &billow4D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_points[3], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_points[3], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_points[3], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_points[3]);
+                program_points[3] = nullptr;
+            }
+            kernel_points[3] = clCreateKernel(program_points[3], "generate_billow_points_4D", nullptr);
+        }
+        //ranges
+        {
+            std::string billow4Dranges = std::string(gpu_generator_utility_gradient_noise_4D) + std::string(billow_value_point_4D) + std::string(billow_ranges_4D);
+            const char* billow4D_code_data = billow4Dranges.data();
+            size_t billow4D_code_data_size = billow4Dranges.size();
+            program_ranges[3] = clCreateProgramWithSource(context, 1, &billow4D_code_data, &billow4D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_ranges[3], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_ranges[3], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_ranges[3], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_ranges[3]);
+                program_ranges[3] = nullptr;
+            }
+            kernel_ranges[3] = clCreateKernel(program_ranges[3], "generate_billow_ranges_4D", nullptr);
+        }
+    }
+}
+
+array<float, 3> billow::get_module_config_f(const noise_billow_generator_module* module)
+{
+    return { module->frequency(), module->lacunarity(), module->persistence() };
+}
+
+array<int, 3> billow::get_module_config_i(const noise_billow_generator_module* module)
+{
+    return { static_cast<int>(module->octave_count()), module->seed(), static_cast<int>(module->quality()) };
+}
 
 void noise_billow_generator_module::set_frequency(float frequency)
 {
@@ -35,11 +244,6 @@ void noise_billow_generator_module::set_seed(int seed)
 void noise_billow_generator_module::set_quality(noise_quality quality)
 {
     _quality = quality;
-}
-
-void noise_billow_generator_module::on_configuration_changed()
-{
-    //TODO
 }
 
 GNOISE_NAMESPACE_END

@@ -49,7 +49,8 @@ void multithreaded_target_configuration::set_percentage_affinity(float affinity)
 }
 
 accelerated_target_configuration::accelerated_target_configuration(noise_module_configuration* configuration):
-    _configuration(configuration)
+    _configuration(configuration),
+    _opencl_target(nullptr)
 {
 }
 
@@ -62,6 +63,7 @@ accelerated_target_configuration& accelerated_target_configuration::operator=(co
 
 accelerated_target_configuration& accelerated_target_configuration::operator=(accelerated_target_configuration&& other) noexcept
 {
+    _opencl_target = other._opencl_target;
     _configuration = other._configuration;
     return *this;
 }

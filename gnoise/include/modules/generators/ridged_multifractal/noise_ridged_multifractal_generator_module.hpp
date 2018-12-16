@@ -55,6 +55,17 @@ struct ridged_multifractal
 
         return value * 1.25f - 1.0f;
     }
+
+    static void create_kernels(
+        cl_device_id target_device, const cl_context& context,
+        array<cl_program, 4>& program_points,
+        array<cl_kernel, 4>& kernel_points,
+        array<cl_program, 4>& program_ranges,
+        array<cl_kernel, 4>& kernel_ranges
+    );
+
+    static array<float, maximum_octave_count + 2> get_module_config_f(const noise_ridged_multifractal_generator_module* module);
+    static array<int, 3> get_module_config_i(const noise_ridged_multifractal_generator_module* module);
 };
 
 class noise_ridged_multifractal_generator_module : public noise_generator_module_def_impl<ridged_multifractal, noise_ridged_multifractal_generator_module>
@@ -94,8 +105,6 @@ public:
     void                                            set_quality(noise_quality quality);
 private:
     void                                            calculate_weights();
-protected:
-    virtual void                                    on_configuration_changed() override;
 private:
     float                                           _frequency = default_ridged_multifractal_frequency;
     float                                           _lacunarity = default_ridged_multifractal_lacunarity;

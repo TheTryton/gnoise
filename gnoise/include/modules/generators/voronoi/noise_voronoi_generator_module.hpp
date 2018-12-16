@@ -173,6 +173,17 @@ struct voronoi
 
         return value + module->displacement() * generator_utility::value_noise(point_candidate_i, 0);
     }
+
+    static void create_kernels(
+        cl_device_id target_device, const cl_context& context,
+        array<cl_program, 4>& program_points,
+        array<cl_kernel, 4>& kernel_points,
+        array<cl_program, 4>& program_ranges,
+        array<cl_kernel, 4>& kernel_ranges
+    );
+
+    static array<float, 2> get_module_config_f(const noise_voronoi_generator_module* module);
+    static array<int, 2> get_module_config_i(const noise_voronoi_generator_module* module);
 };
 
 class noise_voronoi_generator_module : public noise_generator_module_def_impl<voronoi, noise_voronoi_generator_module>
@@ -201,8 +212,6 @@ public:
     void                                            set_displacement(float displacement);
     void                                            set_seed(int seed);
     void                                            set_use_distance(bool use_distance);
-protected:
-    virtual void                                    on_configuration_changed() override;
 private:
     float                                           _frequency = default_voronoi_frequency;
     float                                           _displacement = default_voronoi_displacement;

@@ -1,6 +1,219 @@
 #include "noise_ridged_multifractal_generator_module.hpp"
+#include "noise_ridged_multifractal_generator_module_gpu_code.hpp"
+
+#include <iostream>
 
 GNOISE_NAMESPACE_BEGIN
+
+void ridged_multifractal::create_kernels(
+    cl_device_id target_device, const cl_context& context,
+    array<cl_program, 4>& program_points, array<cl_kernel, 4>& kernel_points,
+    array<cl_program, 4>& program_ranges, array<cl_kernel, 4>& kernel_ranges
+)
+{
+    //1D
+    {
+        //points
+        {
+            std::string ridged_multifractal1Dpoints = std::string(gpu_generator_utility_gradient_noise_1D) + std::string(ridged_multifractal_value_point_1D) + std::string(ridged_multifractal_points_1D);
+            const char* ridged_multifractal1D_code_data = ridged_multifractal1Dpoints.data();
+            size_t ridged_multifractal1D_code_data_size = ridged_multifractal1Dpoints.size();
+            program_points[0] = clCreateProgramWithSource(context, 1, &ridged_multifractal1D_code_data, &ridged_multifractal1D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_points[0], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_points[0], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_points[0], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_points[0]);
+                program_points[0] = nullptr;
+            }
+            kernel_points[0] = clCreateKernel(program_points[0], "generate_ridged_multifractal_points_1D", nullptr);
+        }
+        //ranges
+        {
+            std::string ridged_multifractal1Dranges = std::string(gpu_generator_utility_gradient_noise_1D) + std::string(ridged_multifractal_value_point_1D) + std::string(ridged_multifractal_ranges_1D);
+            const char* ridged_multifractal1D_code_data = ridged_multifractal1Dranges.data();
+            size_t ridged_multifractal1D_code_data_size = ridged_multifractal1Dranges.size();
+            program_ranges[0] = clCreateProgramWithSource(context, 1, &ridged_multifractal1D_code_data, &ridged_multifractal1D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_ranges[0], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_ranges[0], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_ranges[0], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_ranges[0]);
+                program_ranges[0] = nullptr;
+            }
+            kernel_ranges[0] = clCreateKernel(program_ranges[0], "generate_ridged_multifractal_ranges_1D", nullptr);
+        }
+    }
+    //2D
+    {
+        //points
+        {
+            std::string ridged_multifractal2Dpoints = std::string(gpu_generator_utility_gradient_noise_2D) + std::string(ridged_multifractal_value_point_2D) + std::string(ridged_multifractal_points_2D);
+            const char* ridged_multifractal2D_code_data = ridged_multifractal2Dpoints.data();
+            size_t ridged_multifractal2D_code_data_size = ridged_multifractal2Dpoints.size();
+            program_points[1] = clCreateProgramWithSource(context, 1, &ridged_multifractal2D_code_data, &ridged_multifractal2D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_points[1], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_points[1], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_points[1], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_points[1]);
+                program_points[1] = nullptr;
+            }
+            kernel_points[1] = clCreateKernel(program_points[1], "generate_ridged_multifractal_points_2D", nullptr);
+        }
+        //ranges
+        {
+            std::string ridged_multifractal2Dranges = std::string(gpu_generator_utility_gradient_noise_2D) + std::string(ridged_multifractal_value_point_2D) + std::string(ridged_multifractal_ranges_2D);
+            const char* ridged_multifractal2D_code_data = ridged_multifractal2Dranges.data();
+            size_t ridged_multifractal2D_code_data_size = ridged_multifractal2Dranges.size();
+            program_ranges[1] = clCreateProgramWithSource(context, 1, &ridged_multifractal2D_code_data, &ridged_multifractal2D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_ranges[1], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_ranges[1], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_ranges[1], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_ranges[1]);
+                program_ranges[1] = nullptr;
+            }
+            kernel_ranges[1] = clCreateKernel(program_ranges[1], "generate_ridged_multifractal_ranges_2D", nullptr);
+        }
+    }
+    //3D
+    {
+        //points
+        {
+            std::string ridged_multifractal3Dpoints = std::string(gpu_generator_utility_gradient_noise_3D) + std::string(ridged_multifractal_value_point_3D) + std::string(ridged_multifractal_points_3D);
+            const char* ridged_multifractal3D_code_data = ridged_multifractal3Dpoints.data();
+            size_t ridged_multifractal3D_code_data_size = ridged_multifractal3Dpoints.size();
+            program_points[2] = clCreateProgramWithSource(context, 1, &ridged_multifractal3D_code_data, &ridged_multifractal3D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_points[2], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_points[2], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_points[2], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_points[2]);
+                program_points[2] = nullptr;
+            }
+            kernel_points[2] = clCreateKernel(program_points[2], "generate_ridged_multifractal_points_3D", nullptr);
+        }
+        //ranges
+        {
+            std::string ridged_multifractal3Dranges = std::string(gpu_generator_utility_gradient_noise_3D) + std::string(ridged_multifractal_value_point_3D) + std::string(ridged_multifractal_ranges_3D);
+            const char* ridged_multifractal3D_code_data = ridged_multifractal3Dranges.data();
+            size_t ridged_multifractal3D_code_data_size = ridged_multifractal3Dranges.size();
+            program_ranges[2] = clCreateProgramWithSource(context, 1, &ridged_multifractal3D_code_data, &ridged_multifractal3D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_ranges[2], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_ranges[2], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_ranges[2], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_ranges[2]);
+                program_ranges[2] = nullptr;
+            }
+            kernel_ranges[2] = clCreateKernel(program_ranges[2], "generate_ridged_multifractal_ranges_3D", nullptr);
+        }
+    }
+    //4D
+    {
+        //points
+        {
+            std::string ridged_multifractal4Dpoints = std::string(gpu_generator_utility_gradient_noise_4D) + std::string(ridged_multifractal_value_point_4D) + std::string(ridged_multifractal_points_4D);
+            const char* ridged_multifractal4D_code_data = ridged_multifractal4Dpoints.data();
+            size_t ridged_multifractal4D_code_data_size = ridged_multifractal4Dpoints.size();
+            program_points[3] = clCreateProgramWithSource(context, 1, &ridged_multifractal4D_code_data, &ridged_multifractal4D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_points[3], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_points[3], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_points[3], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_points[3]);
+                program_points[3] = nullptr;
+            }
+            kernel_points[3] = clCreateKernel(program_points[3], "generate_ridged_multifractal_points_4D", nullptr);
+        }
+        //ranges
+        {
+            std::string ridged_multifractal4Dranges = std::string(gpu_generator_utility_gradient_noise_4D) + std::string(ridged_multifractal_value_point_4D) + std::string(ridged_multifractal_ranges_4D);
+            const char* ridged_multifractal4D_code_data = ridged_multifractal4Dranges.data();
+            size_t ridged_multifractal4D_code_data_size = ridged_multifractal4Dranges.size();
+            program_ranges[3] = clCreateProgramWithSource(context, 1, &ridged_multifractal4D_code_data, &ridged_multifractal4D_code_data_size, nullptr);
+
+            if (clBuildProgram(program_ranges[3], 0, nullptr, nullptr, nullptr, nullptr) != CL_SUCCESS)
+            {
+                size_t build_log_size = 0;
+                clGetProgramBuildInfo(program_ranges[3], target_device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &build_log_size);
+                std::string build_log;
+                build_log.resize(build_log_size);
+                clGetProgramBuildInfo(program_ranges[3], target_device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log.data(), nullptr);
+
+                std::cout << build_log << std::endl;
+
+                clReleaseProgram(program_ranges[3]);
+                program_ranges[3] = nullptr;
+            }
+            kernel_ranges[3] = clCreateKernel(program_ranges[3], "generate_ridged_multifractal_ranges_4D", nullptr);
+        }
+    }
+}
+
+array<float, maximum_octave_count + 2> ridged_multifractal::get_module_config_f(const noise_ridged_multifractal_generator_module* module)
+{
+    array<float, maximum_octave_count + 2> data;
+    std::copy(module->weights().begin(), module->weights().end(), data.begin() + 2);
+    data[0] = module->frequency();
+    data[1] = module->lacunarity();
+    return data;
+}
+
+array<int, 3> ridged_multifractal::get_module_config_i(const noise_ridged_multifractal_generator_module* module)
+{
+    return { static_cast<int>(module->octave_count()), module->seed(), static_cast<int>(module->quality()) };
+}
 
 void noise_ridged_multifractal_generator_module::set_frequency(float frequency)
 {
@@ -42,53 +255,6 @@ void noise_ridged_multifractal_generator_module::calculate_weights()
         _weights[i] = std::pow(freq, -h);
         freq *= _lacunarity;
     }
-}
-
-void noise_ridged_multifractal_generator_module::on_configuration_changed()
-{
-    //TODO
-}
-
-template<unsigned int D>
-inline float ridged_multifractal_value_point(const noise_ridged_multifractal_generator_module* module, vectorf<D> point)
-{
-    float value = 0.0f;
-    float signal = 0.0f;
-    float weight = 1.0f;
-    float offset = 1.0f;
-    float gain = 2.0f;
-
-    array<float, D> n_point;
-
-    int seed;
-
-    std::transform(point.coords, point.coords + D, point.coords, [&module](float v) {
-        return v * module->frequency();
-    });
-
-    for (unsigned int current_octave = 0; current_octave < module->octave_count(); current_octave++)
-    {
-        std::transform(point.coords, point.coords + D, n_point.begin(), [&module](float v) {
-            return generator_utility::make_int32_range(v);
-        });
-
-        seed = (module->seed() + current_octave) & 0xffffffff;
-        signal = generator_utility::gradient_coherent_noise<D>(n_point, seed, module->quality());
-        signal = fabs(signal);
-        signal = offset - signal;
-        signal *= signal;
-        signal *= weight;
-        weight = signal * gain;
-        weight = generator_utility::clamp(weight, 0.0f, 1.0f);
-
-        value += signal * module->weights()[current_octave];
-
-        std::transform(point.coords, point.coords + D, point.coords, [&module](float v) {
-            return v * module->lacunarity();
-        });
-    }
-
-    return value * 1.25f - 1.0f;
 }
 
 noise_ridged_multifractal_generator_module::noise_ridged_multifractal_generator_module() noexcept :

@@ -15,8 +15,6 @@ class noise_perlin_generator_module;
 
 class perlin
 {
-private:
-    static array<std::string, 8> _code;
 public:
     template<unsigned int D>
     inline static float generate(const noise_perlin_generator_module* module, vectorf<D> point)
@@ -51,14 +49,16 @@ public:
         return value;
     }
 
-    inline static void create_kernels(
-        const cl::Context& context, const cl::CommandQueue& queue,
-        array<cl::Kernel, 4>& kernel_points,
-        array<cl::Kernel, 4>& kernel_ranges
+    static void create_kernels(
+        cl_device_id target_device, const cl_context& context,
+        array<cl_program, 4>& program_points,
+        array<cl_kernel, 4>& kernel_points,
+        array<cl_program, 4>& program_ranges,
+        array<cl_kernel, 4>& kernel_ranges
     );
 
-    inline static array<float, 3> get_module_config_f(const noise_perlin_generator_module* module);
-    inline static array<int, 3> get_module_config_i(const noise_perlin_generator_module* module);
+    static array<float, 3> get_module_config_f(const noise_perlin_generator_module* module);
+    static array<int, 3> get_module_config_i(const noise_perlin_generator_module* module);
 };
 
 class noise_perlin_generator_module : public noise_generator_module_def_impl<perlin, noise_perlin_generator_module>
@@ -97,8 +97,6 @@ public:
     bool                                            set_octave_count(unsigned int octave_count);
     void                                            set_seed(int seed);
     void                                            set_quality(noise_quality quality);
-protected:
-    virtual void                                    on_configuration_changed() override;
 private:
     float                                           _frequency = default_perlin_frequency;
     float                                           _lacunarity = default_perlin_lacunarity;

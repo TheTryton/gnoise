@@ -1,11 +1,10 @@
-#include <CL/cl.hpp>
 #include <iostream>
 #include <chrono>
 #include "WND.hpp"
 
 
 using namespace std;
-
+#include <iostream>
 int main(int argc, char** argv)
 {
     QApplication app(argc,argv);

@@ -21,14 +21,23 @@ struct checkerboard
             return a ^ b;
         })) ? -1.0f : 1.0f;
     }
+
+    static void create_kernels(
+        cl_device_id target_device, const cl_context& context,
+        array<cl_program, 4>& program_points,
+        array<cl_kernel, 4>& kernel_points,
+        array<cl_program, 4>& program_ranges,
+        array<cl_kernel, 4>& kernel_ranges
+    );
+
+    static array<float, 0> get_module_config_f(const noise_checkerboard_generator_module* module);
+    static array<int, 0> get_module_config_i(const noise_checkerboard_generator_module* module);
 };
 
 class noise_checkerboard_generator_module : public noise_generator_module_def_impl<checkerboard, noise_checkerboard_generator_module>
 {
 public:
     noise_checkerboard_generator_module() noexcept = default;
-protected:
-    virtual void                                    on_configuration_changed() override;
 };
 
 GNOISE_NAMESPACE_END

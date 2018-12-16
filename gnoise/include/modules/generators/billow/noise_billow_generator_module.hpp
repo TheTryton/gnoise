@@ -48,6 +48,17 @@ struct billow
 
         return value;
     }
+
+    static void create_kernels(
+        cl_device_id target_device, const cl_context& context,
+        array<cl_program, 4>& program_points,
+        array<cl_kernel, 4>& kernel_points,
+        array<cl_program, 4>& program_ranges,
+        array<cl_kernel, 4>& kernel_ranges
+    );
+
+    static array<float, 3> get_module_config_f(const noise_billow_generator_module* module);
+    static array<int, 3> get_module_config_i(const noise_billow_generator_module* module);
 };
 
 class noise_billow_generator_module : public noise_generator_module_def_impl<billow, noise_billow_generator_module>
@@ -86,8 +97,6 @@ public:
     bool                                            set_octave_count(unsigned int octave_count);
     void                                            set_seed(int seed);
     void                                            set_quality(noise_quality quality);
-protected:
-    virtual void                                    on_configuration_changed() override;
 private:
     float                                           _frequency = default_billow_frequency;
     float                                           _lacunarity = default_billow_lacunarity;

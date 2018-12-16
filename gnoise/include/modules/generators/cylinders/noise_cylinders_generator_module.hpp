@@ -45,6 +45,17 @@ struct cylinders
             return 1.0f - (nearest_dist * 4.0f);
         }
     }
+
+    static void create_kernels(
+        cl_device_id target_device, const cl_context& context,
+        array<cl_program, 4>& program_points,
+        array<cl_kernel, 4>& kernel_points,
+        array<cl_program, 4>& program_ranges,
+        array<cl_kernel, 4>& kernel_ranges
+    );
+
+    static array<float, 1> get_module_config_f(const noise_cylinders_generator_module* module);
+    static array<int, 0> get_module_config_i(const noise_cylinders_generator_module* module);
 };
 
 class noise_cylinders_generator_module : public noise_generator_module_def_impl<cylinders, noise_cylinders_generator_module>
@@ -58,8 +69,6 @@ public:
     }
 
     void                                            set_frequency(float frequency);
-protected:
-    virtual void                                    on_configuration_changed() override;
 private:
     float                                           _frequency = default_cylinders_frequency;
 };

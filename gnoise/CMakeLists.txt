@@ -12,23 +12,31 @@ set(gnoise_Sources
 	include/modules/noise_module.cpp
 
     include/modules/generators/noise_generator_module.hpp
+    include/modules/generators/noise_generator_module_gpu_code.hpp
     include/modules/generators/noise_generator_module.cpp
 
     include/modules/generators/const/noise_const_generator_module.hpp
     include/modules/generators/const/noise_const_generator_module.cpp
     include/modules/generators/perlin/noise_perlin_generator_module.hpp
+    include/modules/generators/perlin/noise_perlin_generator_module_gpu_code.hpp
     include/modules/generators/perlin/noise_perlin_generator_module.cpp
     include/modules/generators/billow/noise_billow_generator_module.hpp
+    include/modules/generators/billow/noise_billow_generator_module_gpu_code.hpp
     include/modules/generators/billow/noise_billow_generator_module.cpp
     include/modules/generators/ridged_multifractal/noise_ridged_multifractal_generator_module.hpp
+    include/modules/generators/ridged_multifractal/noise_ridged_multifractal_generator_module_gpu_code.hpp
     include/modules/generators/ridged_multifractal/noise_ridged_multifractal_generator_module.cpp
     include/modules/generators/voronoi/noise_voronoi_generator_module.hpp
+    include/modules/generators/voronoi/noise_voronoi_generator_module_gpu_code.hpp
     include/modules/generators/voronoi/noise_voronoi_generator_module.cpp
     include/modules/generators/spheres/noise_spheres_generator_module.hpp
+    include/modules/generators/spheres/noise_spheres_generator_module_gpu_code.hpp
     include/modules/generators/spheres/noise_spheres_generator_module.cpp
     include/modules/generators/cylinders/noise_cylinders_generator_module.hpp
+    include/modules/generators/cylinders/noise_cylinders_generator_module_gpu_code.hpp
     include/modules/generators/cylinders/noise_cylinders_generator_module.cpp
     include/modules/generators/checkerboard/noise_checkerboard_generator_module.hpp
+    include/modules/generators/checkerboard/noise_checkerboard_generator_module_gpu_code.hpp
     include/modules/generators/checkerboard/noise_checkerboard_generator_module.cpp
 
     include/modules/non_generator_modules/noise_non_generator_module.hpp
