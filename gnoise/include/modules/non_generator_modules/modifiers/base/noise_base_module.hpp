@@ -8,12 +8,12 @@ inline constexpr float default_base = 2.0f;
 
 class noise_base_module;
 
-struct exponent
+struct base
 {
     inline static float apply(const noise_base_module* module, float x);
 };
 
-class noise_base_module : public noise_modifier_module_base<1, exponent, noise_base_module>
+class noise_base_module : public noise_modifier_module_base<1, base, noise_base_module>
 {
 public:
     noise_base_module() noexcept = default;
@@ -27,7 +27,7 @@ private:
     float                                           _base = default_base;
 };
 
-inline float exponent::apply(const noise_base_module * module, float x)
+inline float base::apply(const noise_base_module * module, float x)
 {
     return std::pow(x, module->base());
 }

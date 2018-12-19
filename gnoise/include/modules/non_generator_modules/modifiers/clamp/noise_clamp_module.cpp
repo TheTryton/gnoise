@@ -2,11 +2,6 @@
 
 GNOISE_NAMESPACE_BEGIN
 
-inline float clamp::apply(const noise_clamp_module* module, float x)
-{
-    return std::max(module->lower_bound(), std::min(x, module->upper_bound()));
-}
-
 inline float noise_clamp_module::lower_bound() const
 {
     return _lower_bound;

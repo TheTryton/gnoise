@@ -7,6 +7,7 @@ set(gnoise_Sources
 	main.cpp
 
 	include/common.hpp
+	include/gnoise.hpp
 
 	include/modules/noise_module.hpp
 	include/modules/noise_module.cpp

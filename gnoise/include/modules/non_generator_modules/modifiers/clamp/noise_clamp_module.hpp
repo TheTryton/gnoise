@@ -29,4 +29,9 @@ private:
     float                                           _upper_bound = default_clamp_upper_bound;
 };
 
+inline float clamp::apply(const noise_clamp_module* module, float x)
+{
+    return std::max(module->lower_bound(), std::min(x, module->upper_bound()));
+}
+
 GNOISE_NAMESPACE_END

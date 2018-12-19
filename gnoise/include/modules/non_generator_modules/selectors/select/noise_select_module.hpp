@@ -74,4 +74,57 @@ private:
     float                                           _max = default_select_max;
 };
 
+inline float select::apply(const noise_select_module * module, float c, float f, float s)
+{
+    float min = module->min();
+    float max = module->max();
+    float falloff = module->falloff();
+
+    if (std::fabs(falloff) > std::numeric_limits<float>::epsilon())
+    {
+        float a;
+        float lmn = min - falloff;
+        if (c < lmn)
+        {
+            return f;
+        }
+        float umn = min + falloff;
+        if (c < umn)
+        {
+            a = map_cubic_scurve((c - lmn) / (umn - lmn));
+            return interpolate_linear(
+                f,
+                s,
+                a
+            );
+        }
+        float lmx = max - falloff;
+        if (c < lmx)
+        {
+            return s;
+        }
+        float umx = max + falloff;
+        if (c < umx)
+        {
+            a = map_cubic_scurve((c - lmn) / (umn - lmn));
+            return interpolate_linear(
+                s,
+                f,
+                a
+            );
+        }
+        return f;
+    }
+    if (c < min)
+    {
+        return f;
+    }
+    if (c > max)
+    {
+        return s;
+    }
+
+    return f;
+}
+
 GNOISE_NAMESPACE_END

@@ -1,23 +1,9 @@
 #pragma once
 
-#include <QtWidgets>
-#include "include/modules/generators/voronoi/noise_voronoi_generator_module.hpp"
-#include "include/modules/generators/perlin/noise_perlin_generator_module.hpp"
-#include "include/modules/generators/ridged_multifractal/noise_ridged_multifractal_generator_module.hpp"
-#include "include/modules/generators/billow/noise_billow_generator_module.hpp"
-#include "include/modules/generators/checkerboard/noise_checkerboard_generator_module.hpp"
-#include "include/modules/generators/spheres/noise_spheres_generator_module.hpp"
-#include "include/modules/generators/cylinders/noise_cylinders_generator_module.hpp"
-#include "include/modules/non_generator_modules/combiners/noise_combiner_module.hpp"
-#include "include/modules/non_generator_modules/transformers/displace/noise_displace_module.hpp"
-#include "include/modules/non_generator_modules/transformers/turbulence/noise_turbulence_module.hpp"
-#include "include/modules/non_generator_modules/transformers/linear_transformer/rotate_point/noise_rotate_point_module.hpp"
-#include "include/modules/non_generator_modules/transformers/linear_transformer/scale_point/noise_scale_point_module.hpp"
-
-#include <chrono>
-#include <iostream>
-
-using namespace std::chrono;
+#include "models/module_models.hpp"
+#include "delegates/additional_delegates.hpp"
+#include "node_editor_scene/node_editor_scene.hpp"
+#include "node_editor/node.hpp"
 
 class Image : public QWidget
 {
@@ -44,14 +30,55 @@ private:
 };
 
 #include <iostream>
+#include <functional>
+
+using namespace std;
 
 class MainWindow : public QWidget
 {
     Q_OBJECT
+private:
+    QTableView*                     test;
+    node_editor_view*               view;
+    QGraphicsScene*                 scene;
+    noise_perlin_generator_module   module;
 public:
     MainWindow(QWidget *parent = nullptr) :
         QWidget(parent)
     {
+        auto model = new perlin_module_model(&module);
+        test = new QTableView;
+        test->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+        test->setModel(model);
+        test->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+        for (int row = 0; row < model->rowCount(); row++)
+        {
+            if (auto custom_delegate = model->delegateForRow(row))
+            {
+                test->setItemDelegateForRow(row, custom_delegate);
+            }
+        }
+
+        
+        view = new node_editor_view;
+        scene = new QGraphicsScene;
+        view->setScene(scene);
+        QWidget* w = new QWidget;
+        w->setLayout(new QHBoxLayout);
+        QComboBox* box = new QComboBox;
+        box->setFocusPolicy(Qt::NoFocus);
+        box->addItems({ "a","b","c" });
+        w->layout()->addWidget(box);
+
+        scene->setSceneRect(QRectF(-1000.0, -1000.0, 2000.0, 2000.0));
+        scene->addItem(new node);
+        //list->setFocusPolicy(Qt::FocusPolicy::NoFocus);
+        //auto a =scene->addWidget(w);
+        //a->setPos(-100, -100);
+        //scene->addRect(QRectF(-100, -100, 50, 50));
+        setLayout(new QVBoxLayout);
+        layout()->addWidget(view);
+        /*
         auto root_layout = new QVBoxLayout();
         auto button_layout = new QHBoxLayout();
         setLayout(root_layout);
@@ -64,20 +91,26 @@ public:
         image_rect->setWidget(image);
         QObject::connect(button_perlin, &QPushButton::released, this, [image]() {
 
-            gnoise::noise_voronoi_generator_module mod0;
+            gnoise::noise_voronoi_generator_module modC;
             gnoise::noise_ridged_multifractal_generator_module mod1;
-            gnoise::noise_perlin_generator_module modC;
+            gnoise::noise_perlin_generator_module mod0;
 
             gnoise::noise_turbulence_module modF;
 
-            gnoise::range2f a;
-            gnoise::precision2 b;
+            gnoise::range4f a;
+            gnoise::precision4 b;
             a.set_dimension_min<0>(0.0f);
             a.set_dimension_max<0>(10.0f);
             a.set_dimension_min<1>(0.0f);
             a.set_dimension_max<1>(10.0f);
-            b.set_dimension_precision<0>(10000);
-            b.set_dimension_precision<1>(10000);
+            a.set_dimension_min<2>(0.0f);
+            a.set_dimension_max<2>(10.0f);
+            a.set_dimension_min<3>(0.0f);
+            a.set_dimension_max<3>(10.0f);
+            b.set_dimension_precision<0>(1000);
+            b.set_dimension_precision<1>(1000);
+            b.set_dimension_precision<2>(1);
+            b.set_dimension_precision<3>(1);
 
             mod0.configuration().set_computation_target(gnoise::module_computation_target::gpu);
             mod1.configuration().set_computation_target(gnoise::module_computation_target::gpu);
@@ -143,7 +176,7 @@ public:
             modF.set_computation_module(&modC);
 
             auto start = high_resolution_clock::now();
-            auto values = modF.compute(a, b);
+            auto values = mod0.compute(a, b);
             auto end = high_resolution_clock::now();
             std::cout << (end - start).count() / 1e9 << "s" << std::endl;
 
@@ -178,6 +211,6 @@ public:
                 }
             }
             image->setImage(pm);
-        });
+        });*/
     }
 };
