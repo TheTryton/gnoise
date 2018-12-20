@@ -3,7 +3,9 @@
 #include "models/module_models.hpp"
 #include "delegates/additional_delegates.hpp"
 #include "node_editor_scene/node_editor_scene.hpp"
-#include "node_editor/node.hpp"
+#include "node_editor/node_model/node.hpp"
+#include "node_editor/node_model/pin.hpp"
+#include "node_editor/node_model/link.hpp"
 
 class Image : public QWidget
 {
@@ -40,7 +42,7 @@ class MainWindow : public QWidget
 private:
     QTableView*                     test;
     node_editor_view*               view;
-    QGraphicsScene*                 scene;
+    node_editor_scene*              scene;
     noise_perlin_generator_module   module;
 public:
     MainWindow(QWidget *parent = nullptr) :
@@ -58,10 +60,9 @@ public:
                 test->setItemDelegateForRow(row, custom_delegate);
             }
         }
-
         
         view = new node_editor_view;
-        scene = new QGraphicsScene;
+        scene = new node_editor_scene;
         view->setScene(scene);
         QWidget* w = new QWidget;
         w->setLayout(new QHBoxLayout);
@@ -71,11 +72,42 @@ public:
         w->layout()->addWidget(box);
 
         scene->setSceneRect(QRectF(-1000.0, -1000.0, 2000.0, 2000.0));
-        scene->addItem(new node);
-        //list->setFocusPolicy(Qt::FocusPolicy::NoFocus);
-        //auto a =scene->addWidget(w);
-        //a->setPos(-100, -100);
-        //scene->addRect(QRectF(-100, -100, 50, 50));
+
+        {
+            auto nd = new node_editor::node;
+            nd->add_pin(node_editor::pin_direction::input);
+            nd->add_pin(node_editor::pin_direction::input);
+
+            nd->add_pin(node_editor::pin_direction::output);
+            nd->add_pin(node_editor::pin_direction::output);
+            nd->add_pin(node_editor::pin_direction::output);
+            auto a = new QGraphicsProxyWidget();
+            a->setWidget(w);
+
+            nd->set_content(a);
+
+            scene->addItem(nd);
+        }
+        {
+            auto nd = new node_editor::node;
+            auto l = nd->add_pin(node_editor::pin_direction::input);
+            l->set_name("kappal");
+            nd->add_pin(node_editor::pin_direction::input);
+
+            nd->add_pin(node_editor::pin_direction::output);
+            auto k = nd->add_pin(node_editor::pin_direction::output);
+            k->setToolTip("adwdasdaw");
+            k->set_name("kappa1");
+            nd->add_pin(node_editor::pin_direction::output);
+            auto a = new QGraphicsProxyWidget();
+            a->setWidget(test);
+
+            nd->set_content(a);
+
+            scene->addItem(nd);
+        }
+       
+
         setLayout(new QVBoxLayout);
         layout()->addWidget(view);
         /*
