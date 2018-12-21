@@ -1,10 +1,10 @@
-#include "node.hpp"
-#include "pin.hpp"
+#include "default_node.hpp"
+#include "../flow_chart_base/pin_base.hpp"
 
-NODE_EDITOR_NAMESPACE_BEGIN
+FLOW_CHART_NAMESPACE_BEGIN
 
-node::node(QGraphicsWidget* parent):
-    QGraphicsWidget(parent)
+default_node::default_node(QGraphicsWidget* parent):
+    node_base(parent)
 {
     setMinimumSize(QSize(120, 60));
 
@@ -19,7 +19,7 @@ node::node(QGraphicsWidget* parent):
     _root_layout->setColumnFixedWidth(0, 16);
     _root_layout->setColumnFixedWidth(2, 16);
     setLayout(_root_layout);
-    
+
     _input_pins_layout = new QGraphicsLinearLayout;
     _input_pins_layout->setOrientation(Qt::Vertical);
     _root_layout->addItem(_input_pins_layout, 0, 0);
@@ -31,22 +31,22 @@ node::node(QGraphicsWidget* parent):
     setAcceptHoverEvents(true);
 }
 
-std::vector<pin*> node::pins(pin_direction direction)
+std::vector<pin_base*> default_node::pins(pin_direction direction) const
 {
-    if(direction == pin_direction::input)
+    if (direction == pin_direction::input)
     {
         return _input_pins;
     }
-    else if(direction == pin_direction::output)
+    else if (direction == pin_direction::output)
     {
         return _output_pins;
     }
-    return std::vector<node_editor::pin*>();
+    return std::vector<pin_base*>();
 }
 
-unsigned int node::pin_index(const node_editor::pin* p)
+int default_node::pin_index(const pin_base* p) const
 {
-    if(p->direction() == pin_direction::input)
+    if (p->direction() == pin_direction::input)
     {
         auto result = find(_input_pins.begin(), _input_pins.end(), p);
         if (result != _input_pins.end())
@@ -62,14 +62,32 @@ unsigned int node::pin_index(const node_editor::pin* p)
             return result - _output_pins.begin();
         }
     }
-    return std::numeric_limits<unsigned int>::max();
+    return -1;
 }
 
-pin* node::pin(pin_direction direction, unsigned int index)
+size_t default_node::pins_count(pin_direction direction) const
 {
     if (direction == pin_direction::input)
     {
-        if(index < _input_pins.size())
+        return _input_pins.size();
+    }
+    else if (direction == pin_direction::output)
+    {
+        return _output_pins.size();
+    }
+    return 0;
+}
+
+pin_base* default_node::pin(pin_direction direction, int index) const
+{
+    if (index < 0)
+    {
+        return nullptr;
+    }
+
+    if (direction == pin_direction::input)
+    {
+        if (index < _input_pins.size())
         {
             return _input_pins[index];
         }
@@ -84,69 +102,67 @@ pin* node::pin(pin_direction direction, unsigned int index)
     return nullptr;
 }
 
-void node::set_content(QGraphicsLayoutItem* content)
+void default_node::add_pin(pin_base* p)
 {
-    _content = content;
-    _root_layout->addItem(content, 0, 1);
-}
-
-QGraphicsLayoutItem* node::content() const
-{
-    return _content;
-}
-
-pin* node::add_pin(pin_direction direction)
-{
-    if (direction == pin_direction::input)
+    if(!p)
     {
-        node_editor::pin* p = new  node_editor::pin(this, pin_direction::input, pin_link_mode::exclusive);
+        return;
+    }
+
+    if (p->direction() == pin_direction::input)
+    {
+        _set_pin_parent_to_this(p);
         _input_pins_layout->addItem(p);
         _input_pins_layout->setAlignment(p, Qt::AlignVCenter | Qt::AlignLeft);
         _input_pins.push_back(p);
-        return p;
     }
-    else if (direction == pin_direction::output)
+    else if (p->direction() == pin_direction::output)
     {
-        node_editor::pin* p = new  node_editor::pin(this, pin_direction::output, pin_link_mode::unconstrained);
+        _set_pin_parent_to_this(p);
         _output_pins_layout->addItem(p);
         _output_pins_layout->setAlignment(p, Qt::AlignVCenter | Qt::AlignRight);
         _output_pins.push_back(p);
-        return p;
     }
-    return nullptr;
 }
 
-pin* node::insert_pin(pin_direction direction, unsigned int index)
+void default_node::insert_pin(pin_base* p, int index)
 {
-    if (direction == pin_direction::input)
+    if(index < 0 || !p)
     {
-        if(index > _input_pins.size())
+        return;
+    }
+
+    if (p->direction() == pin_direction::input)
+    {
+        if (index > _input_pins.size())
         {
-            return nullptr;
+            return;
         }
-        node_editor::pin* p = new  node_editor::pin(this, pin_direction::input, pin_link_mode::exclusive);
+        _set_pin_parent_to_this(p);
         _input_pins_layout->insertItem(index, p);
         _input_pins_layout->setAlignment(p, Qt::AlignVCenter | Qt::AlignLeft);
         _input_pins.insert(_input_pins.begin() + index, p);
-        return p;
     }
-    else if (direction == pin_direction::output)
+    else if (p->direction() == pin_direction::output)
     {
         if (index > _output_pins.size())
         {
-            return nullptr;
+            return;
         }
-        node_editor::pin* p = new  node_editor::pin(this, pin_direction::output, pin_link_mode::unconstrained);
+        _set_pin_parent_to_this(p);
         _output_pins_layout->insertItem(index, p);
         _output_pins_layout->setAlignment(p, Qt::AlignVCenter | Qt::AlignRight);
-        _output_pins.insert(_input_pins.begin() + index, p);
-        return p;
+        _output_pins.insert(_output_pins.begin() + index, p);
     }
-    return nullptr;
 }
 
-void node::remove_pin(pin_direction direction, unsigned int index)
+void default_node::remove_pin(pin_direction direction, int index)
 {
+    if (index < 0)
+    {
+        return;
+    }
+
     if (direction == pin_direction::input)
     {
         if (index >= _input_pins.size())
@@ -169,37 +185,35 @@ void node::remove_pin(pin_direction direction, unsigned int index)
     }
 }
 
-void node::remove_pin(node_editor::pin* p)
+void default_node::remove_pin(pin_base* p)
 {
     remove_pin(p->direction(), pin_index(p));
 }
 
-unsigned int node::pins_count(pin_direction direction) const
+void default_node::set_content(QGraphicsLayoutItem* content)
 {
-    if (direction == pin_direction::input)
-    {
-        return _input_pins.size();
-    }
-    else if (direction == pin_direction::output)
-    {
-        return _output_pins.size();
-    }
-    return 0;
+    _content = content;
+    _root_layout->addItem(content, 0, 1);
 }
 
-QRectF node::boundingRect() const
+QGraphicsLayoutItem* default_node::content() const
+{
+    return _content;
+}
+
+QRectF default_node::boundingRect() const
 {
     return layout()->geometry();
 }
 
-QPainterPath node::shape() const
+QPainterPath default_node::shape() const
 {
     QPainterPath path;
     path.addRoundedRect(layout()->geometry(), 10, 10);
     return path;
 }
 
-void node::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+void default_node::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     painter->setPen(Qt::PenStyle::NoPen);
 
@@ -225,19 +239,18 @@ void node::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWid
     painter->drawPath(node_path);
 }
 
-void node::hoverEnterEvent(QGraphicsSceneHoverEvent* event)
+QMenu* default_node::context_menu_requested() const
 {
-    setCursor(Qt::CursorShape::ArrowCursor);
-    QGraphicsWidget::hoverEnterEvent(event);
-}
-
-void node::contextMenuEvent(QGraphicsSceneContextMenuEvent* event)
-{
-    QMenu menu;
-    menu.addAction("Delete node", [this]() {
+    QMenu* menu = new QMenu;
+    menu->addAction("Delete node", [=]() {
         delete this;
     });
-    menu.exec(event->screenPos());
+    return menu;
 }
 
-NODE_EDITOR_NAMESPACE_END
+bool default_node::removable() const
+{
+    return true;
+}
+
+FLOW_CHART_NAMESPACE_END

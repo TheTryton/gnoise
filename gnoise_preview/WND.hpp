@@ -2,10 +2,9 @@
 
 #include "models/module_models.hpp"
 #include "delegates/additional_delegates.hpp"
-#include "node_editor_scene/node_editor_scene.hpp"
-#include "node_editor/node_model/node.hpp"
-#include "node_editor/node_model/pin.hpp"
-#include "node_editor/node_model/link.hpp"
+#include "flow_chart/default_flow_chart_view.hpp"
+#include "flow_chart/flow_chart_default/default_node.hpp"
+#include "flow_chart/flow_chart_default/default_pin.hpp"
 
 class Image : public QWidget
 {
@@ -35,14 +34,14 @@ private:
 #include <functional>
 
 using namespace std;
+using namespace flow_chart;
 
 class MainWindow : public QWidget
 {
     Q_OBJECT
 private:
     QTableView*                     test;
-    node_editor_view*               view;
-    node_editor_scene*              scene;
+    default_flow_chart_view*        view;
     noise_perlin_generator_module   module;
 public:
     MainWindow(QWidget *parent = nullptr) :
@@ -61,9 +60,8 @@ public:
             }
         }
         
-        view = new node_editor_view;
-        scene = new node_editor_scene;
-        view->setScene(scene);
+        view = new default_flow_chart_view;
+        auto scene = view->scene();
         QWidget* w = new QWidget;
         w->setLayout(new QHBoxLayout);
         QComboBox* box = new QComboBox;
@@ -71,16 +69,15 @@ public:
         box->addItems({ "a","b","c" });
         w->layout()->addWidget(box);
 
-        scene->setSceneRect(QRectF(-1000.0, -1000.0, 2000.0, 2000.0));
-
         {
-            auto nd = new node_editor::node;
-            nd->add_pin(node_editor::pin_direction::input);
-            nd->add_pin(node_editor::pin_direction::input);
+            auto nd = new default_node;
+            nd->add_pin(new default_pin(pin_direction::input, pin_link_mode::exclusive));
+            nd->add_pin(new default_pin(pin_direction::input, pin_link_mode::exclusive));
 
-            nd->add_pin(node_editor::pin_direction::output);
-            nd->add_pin(node_editor::pin_direction::output);
-            nd->add_pin(node_editor::pin_direction::output);
+            nd->add_pin(new default_pin(pin_direction::output, pin_link_mode::unconstrained));
+            nd->add_pin(new default_pin(pin_direction::output, pin_link_mode::unconstrained));
+            nd->add_pin(new default_pin(pin_direction::output, pin_link_mode::unconstrained));
+
             auto a = new QGraphicsProxyWidget();
             a->setWidget(w);
 
@@ -89,16 +86,19 @@ public:
             scene->addItem(nd);
         }
         {
-            auto nd = new node_editor::node;
-            auto l = nd->add_pin(node_editor::pin_direction::input);
+            auto nd = new default_node;
+            auto l = new default_pin(pin_direction::input, pin_link_mode::exclusive);
+            nd->add_pin(l);
             l->set_name("kappal");
-            nd->add_pin(node_editor::pin_direction::input);
+            nd->add_pin(new default_pin(pin_direction::input, pin_link_mode::exclusive));
 
-            nd->add_pin(node_editor::pin_direction::output);
-            auto k = nd->add_pin(node_editor::pin_direction::output);
+            nd->add_pin(new default_pin(pin_direction::output, pin_link_mode::unconstrained));
+            auto k = new default_pin(pin_direction::output, pin_link_mode::unconstrained);
             k->setToolTip("adwdasdaw");
             k->set_name("kappa1");
-            nd->add_pin(node_editor::pin_direction::output);
+            nd->add_pin(k);
+            nd->add_pin(new default_pin(pin_direction::output, pin_link_mode::unconstrained));
+
             auto a = new QGraphicsProxyWidget();
             a->setWidget(test);
 

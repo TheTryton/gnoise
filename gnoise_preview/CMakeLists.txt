@@ -18,16 +18,27 @@ set(gnoise_preview_Sources
     delegates/additional_delegates.hpp
     delegates/additional_delegates.cpp
 
-    node_editor/node_model/model_common.hpp
-    node_editor/node_model/node.hpp
-    node_editor/node_model/node.cpp
-    node_editor/node_model/link.hpp
-    node_editor/node_model/link.cpp
-    node_editor/node_model/pin.hpp
-    node_editor/node_model/pin.cpp
+    flow_chart/flow_chart_common.hpp
+    flow_chart/flow_chart_view_base.hpp
+    flow_chart/flow_chart_view_base.cpp
+    flow_chart/default_flow_chart_view.hpp
+    flow_chart/default_flow_chart_view.cpp
+    flow_chart/default_flow_chart_scene.hpp
+    flow_chart/default_flow_chart_scene.cpp
 
-    node_editor_scene/node_editor_scene.hpp
-    node_editor_scene/node_editor_scene.cpp
+    flow_chart/flow_chart_base/node_base.hpp
+    flow_chart/flow_chart_base/node_base.cpp
+    flow_chart/flow_chart_base/link_base.hpp
+    flow_chart/flow_chart_base/link_base.cpp
+    flow_chart/flow_chart_base/pin_base.hpp
+    flow_chart/flow_chart_base/pin_base.cpp
+
+    flow_chart/flow_chart_default/default_node.hpp
+    flow_chart/flow_chart_default/default_node.cpp
+    flow_chart/flow_chart_default/default_link.hpp
+    flow_chart/flow_chart_default/default_link.cpp
+    flow_chart/flow_chart_default/default_pin.hpp
+    flow_chart/flow_chart_default/default_pin.cpp
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${gnoise_preview_Sources})

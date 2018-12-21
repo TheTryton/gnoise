@@ -1,12 +1,10 @@
-#include "pin.hpp"
-#include "node.hpp"
-#include "link.hpp"
+#include "default_pin.hpp"
+#include "../flow_chart_base/link_base.hpp"
 
-NODE_EDITOR_NAMESPACE_BEGIN
+FLOW_CHART_NAMESPACE_BEGIN
 
-pin::pin(node * parent_node, pin_direction direction, pin_link_mode mode, QGraphicsWidget * parent):
-    QGraphicsWidget(parent),
-    _parent_node(parent_node),
+default_pin::default_pin(pin_direction direction, pin_link_mode mode, QGraphicsWidget* parent) :
+    pin_base(parent),
     _direction(direction),
     _pin_link_mode(mode)
 {
@@ -14,147 +12,127 @@ pin::pin(node * parent_node, pin_direction direction, pin_link_mode mode, QGraph
     setFlag(ItemSendsGeometryChanges);
 }
 
-pin::~pin()
-{
-    for(auto& link : _links)
-    {
-        delete link;
-    }
-}
-
-node* pin::parent_node() const
-{
-    return _parent_node;
-}
-
-QFont pin::font() const
-{
-    return _name_font;
-}
-
-void pin::set_font(const QFont& font)
-{
-    _name_font = font;
-    update();
-}
-
-QString pin::name() const
-{
-    return _name;
-}
-
-void pin::set_name(const QString& name)
-{
-    _name = name;
-    update();
-}
-
-unsigned int pin::index() const
-{
-    return _parent_node->pin_index(this);
-}
-
-pin_direction pin::direction() const
+pin_direction default_pin::direction() const
 {
     return _direction;
 }
 
-pin_link_mode pin::link_mode() const
+pin_link_mode default_pin::link_mode() const
 {
     return _pin_link_mode;
 }
 
-void pin::set_link_mode(pin_link_mode mode)
-{
-    _pin_link_mode = mode;
-}
-
-QPointF pin::pin_pos() const
+QPointF default_pin::pin_pos() const
 {
     QPointF pin_middle;
     QRectF pin_rect;
     if (direction() == pin_direction::input)
     {
-        pin_middle = QPointF(10, geometry().height()/2);
+        pin_middle = QPointF(10, geometry().height() / 2);
         pin_rect = QRectF(pin_middle - QPointF(10, 10), pin_middle + QPointF(10, 10));
     }
     else if (direction() == pin_direction::output)
     {
-        pin_middle = QPointF(geometry().width() - 10, geometry().height()/2);
+        pin_middle = QPointF(geometry().width() - 10, geometry().height() / 2);
         pin_rect = QRectF(pin_middle - QPointF(10, 10), pin_middle + QPointF(10, 10));
     }
 
     return mapToScene(pin_middle);
 }
 
-std::vector<link*> pin::links() const
+QFont default_pin::font() const
 {
-    return _links;
+    return _name_font;
 }
 
-void pin::on_connected(link* l)
+void default_pin::set_font(const QFont& font)
 {
+    _name_font = font;
+    update();
 }
 
-void pin::on_disconnected(link* l)
+QString default_pin::name() const
 {
+    return _name;
 }
 
-void pin::_connect(link* link)
+void default_pin::set_name(const QString& name)
 {
-    if(_pin_link_mode == pin_link_mode::exclusive)
+    _name = name;
+    update();
+}
+
+void default_pin::on_connected(link_base* l)
+{
+    if(direction() == pin_direction::input)
     {
-        if(!_links.empty())
-        {
-            _disconnect(_links.front());
-        }
+        qDebug() << "pin " << this << " connected to pin: " << l->from_pin();
     }
-
-    _links.push_back(link);
-}
-
-void pin::_disconnect_no_delete(link * link)
-{
-    auto it = std::find(_links.begin(), _links.end(), link);
-    _links.erase(it);
-}
-
-void pin::_disconnect(link* link)
-{
-    auto it = std::find(_links.begin(), _links.end(), link);
-    if(it != _links.end())
+    else if(direction() == pin_direction::output)
     {
-        delete *it;
+        qDebug() << "pin " << this << " connected to pin: " << l->to_pin();
     }
 }
 
-QRectF pin::boundingRect() const
+void default_pin::on_disconnected(link_base * l)
+{
+    if (direction() == pin_direction::input)
+    {
+        qDebug() << "pin " << this << " disconnected from pin: " << l->from_pin();
+    }
+    else if (direction() == pin_direction::output)
+    {
+        qDebug() << "pin " << this << " disconnected from pin: " << l->to_pin();
+    }
+}
+
+bool default_pin::can_connect_to(pin_base* other) const
+{
+    if(other->parent_node() == this->parent_node())
+    {
+        return false;
+    }
+
+    if(other == this)
+    {
+        return false;
+    }
+
+    if (other->direction() == this->direction())
+    {
+        return false;
+    }
+
+    return true;
+}
+
+QRectF default_pin::boundingRect() const
 {
     return QRectF(QPointF(0, 0), geometry().size());
 }
 
-void pin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+void default_pin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
     auto rect_hover = QRectF(QPointF(0, 0), geometry().size());
 
-    QPointF pin_middle; 
+    QPointF pin_middle;
     QRectF pin_rect;
     if (direction() == pin_direction::input)
     {
         pin_middle = QPointF(10, rect_hover.center().y());
         pin_rect = QRectF(pin_middle - QPointF(10, 10), pin_middle + QPointF(10, 10));
     }
-    else if(direction() == pin_direction::output)
+    else if (direction() == pin_direction::output)
     {
         pin_middle = QPointF(rect_hover.width() - 10, rect_hover.center().y());
         pin_rect = QRectF(pin_middle - QPointF(10, 10), pin_middle + QPointF(10, 10));
     }
-    
+
     auto pin_outer_circle = pin_rect.adjusted(3, 3, -3, -3);
     auto pin_inner_circle = pin_rect.adjusted(6, 6, -6, -6);
 
     QRectF rect_name;
-    
+
     if (direction() == pin_direction::input)
     {
         rect_name = rect_hover.adjusted(20, 0, 0, 0);
@@ -176,7 +154,7 @@ void pin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidg
         painter->drawRoundedRect(rect_hover, 4, 4);
     }
 
-    if (!_links.empty())
+    if (links_count())
     {
         painter->setBrush(QColor(255, 0, 0));
         painter->drawEllipse(pin_outer_circle);
@@ -197,18 +175,18 @@ void pin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidg
     painter->drawText(rect_name, Qt::AlignCenter, _name);
 }
 
-void pin::setGeometry(const QRectF& geom)
+void default_pin::setGeometry(const QRectF& geom)
 {
     prepareGeometryChange();
     QGraphicsLayoutItem::setGeometry(geom);
     setPos(geom.topLeft());
 }
 
-QSizeF pin::sizeHint(Qt::SizeHint which, const QSizeF& constraint) const
+QSizeF default_pin::sizeHint(Qt::SizeHint which, const QSizeF& constraint) const
 {
     auto metrics = QFontMetrics(_name_font);
     auto text_size = metrics.size(Qt::TextSingleLine, _name);
-    if(text_size.width() > 0)
+    if (text_size.width() > 0)
     {
         text_size.setWidth(text_size.width() + 5);
     }
@@ -225,4 +203,4 @@ QSizeF pin::sizeHint(Qt::SizeHint which, const QSizeF& constraint) const
     return constraint;
 }
 
-NODE_EDITOR_NAMESPACE_END
+FLOW_CHART_NAMESPACE_END

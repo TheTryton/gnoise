@@ -1,15 +1,8 @@
-#include "node_editor_scene.hpp"
-#include "node_editor/node_model/node.hpp"
-#include "node_editor/node_model/pin.hpp"
-#include "node_editor/node_model/link.hpp"
+#include "flow_chart_view_base.hpp"
 
-node_editor_scene::node_editor_scene(QObject* parent) :
-    QGraphicsScene(parent)
-{
-    
-}
+FLOW_CHART_NAMESPACE_BEGIN
 
-node_editor_view::node_editor_view(QWidget* parent) :
+flow_char_view_base::flow_char_view_base(QWidget* parent) :
     QGraphicsView(parent),
     _selection_rubber_band(QRubberBand::Shape::Rectangle, this)
 {
@@ -21,27 +14,27 @@ node_editor_view::node_editor_view(QWidget* parent) :
     setViewportUpdateMode(QGraphicsView::ViewportUpdateMode::FullViewportUpdate);
 }
 
-void node_editor_view::mousePressEvent(QMouseEvent* event)
+void flow_char_view_base::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::MouseButton::LeftButton)
     {
-        if(auto item = itemAt(event->pos()))
+        if (auto item = itemAt(event->pos()))
         {
-            if(auto p = dynamic_cast<node_editor::pin*>(item))
+            if (auto p = dynamic_cast<pin_base*>(item))
             {
-                if(!_currently_created_link)
+                if (!_currently_created_link)
                 {
-                    if(p->direction() == node_editor::pin_direction::input)
+                    if (p->direction() == pin_direction::input)
                     {
-                        _currently_created_link = new node_editor::link;
+                        _currently_created_link = create_link();
                         _currently_created_link->set_to_pin(p);
                         _currently_created_link_pin = p;
                         _currently_created_link->set_from_point(mapToScene(event->pos()));
                         scene()->addItem(_currently_created_link);
                     }
-                    else if(p->direction() == node_editor::pin_direction::output)
+                    else if (p->direction() == pin_direction::output)
                     {
-                        _currently_created_link = new node_editor::link;
+                        _currently_created_link = create_link();
                         _currently_created_link->set_from_pin(p);
                         _currently_created_link_pin = p;
                         _currently_created_link->set_to_point(mapToScene(event->pos()));
@@ -50,31 +43,22 @@ void node_editor_view::mousePressEvent(QMouseEvent* event)
                 }
                 else
                 {
-                    if(p != _currently_created_link_pin)
+                    if (p->can_connect_to(_currently_created_link_pin))
                     {
-                        if(p->direction() == _currently_created_link_pin->direction())
+                        if (_currently_created_link_pin->direction() == pin_direction::input)
                         {
-                            delete _currently_created_link;
-                            _currently_created_link = nullptr;
-                            _currently_created_link_pin = nullptr;
+                            _currently_created_link->set_from_pin(p);
                         }
-                        else
+                        else if (_currently_created_link_pin->direction() == pin_direction::output)
                         {
-                            if (_currently_created_link_pin->direction() == node_editor::pin_direction::input)
-                            {
-                                _currently_created_link->set_from_pin(p);
-                            }
-                            else if (_currently_created_link_pin->direction() == node_editor::pin_direction::output)
-                            {
-                                _currently_created_link->set_to_pin(p);
-                            }
-                            _currently_created_link->set_selectable(true);
-                            _currently_created_link = nullptr;
-                            _currently_created_link_pin = nullptr;
+                            _currently_created_link->set_to_pin(p);
                         }
+                        _currently_created_link = nullptr;
+                        _currently_created_link_pin = nullptr;
                     }
                     else
                     {
+                        _currently_created_link->about_to_remove();
                         delete _currently_created_link;
                         _currently_created_link = nullptr;
                         _currently_created_link_pin = nullptr;
@@ -85,6 +69,7 @@ void node_editor_view::mousePressEvent(QMouseEvent* event)
             {
                 if (_currently_created_link)
                 {
+                    _currently_created_link->about_to_remove();
                     delete _currently_created_link;
                     _currently_created_link = nullptr;
                     _currently_created_link_pin = nullptr;
@@ -92,14 +77,14 @@ void node_editor_view::mousePressEvent(QMouseEvent* event)
 
                 QGraphicsView::mousePressEvent(event);
                 auto selected_items = scene()->selectedItems();
-                if(!selected_items.empty())
+                if (!selected_items.empty())
                 {
                     auto selected_item = selected_items.front();;
-                    if (dynamic_cast<node_editor::node*>(selected_item))
+                    if (dynamic_cast<node_base*>(selected_item))
                     {
                         for (auto& item : scene()->items())
                         {
-                            if (item != selected_item && dynamic_cast<node_editor::node*>(item))
+                            if (item != selected_item && dynamic_cast<node_base*>(item))
                             {
                                 if (item->zValue() == 1.0)
                                 {
@@ -116,6 +101,7 @@ void node_editor_view::mousePressEvent(QMouseEvent* event)
         {
             if (_currently_created_link)
             {
+                _currently_created_link->about_to_remove();
                 delete _currently_created_link;
                 _currently_created_link = nullptr;
                 _currently_created_link_pin = nullptr;
@@ -124,10 +110,11 @@ void node_editor_view::mousePressEvent(QMouseEvent* event)
             QGraphicsView::mousePressEvent(event);
         }
     }
-    else if(event->button() == Qt::MouseButton::RightButton)
+    else if (event->button() == Qt::MouseButton::RightButton)
     {
         if (_currently_created_link)
         {
+            _currently_created_link->about_to_remove();
             delete _currently_created_link;
             _currently_created_link = nullptr;
             _currently_created_link_pin = nullptr;
@@ -141,6 +128,23 @@ void node_editor_view::mousePressEvent(QMouseEvent* event)
             _selection_rubber_band.show();
             event->accept();
         }
+        else
+        {
+            if(auto n = dynamic_cast<node_base*>(item))
+            {
+                if(auto menu = n->context_menu_requested())
+                {
+                    menu->exec(event->globalPos());
+                }
+            }
+            if (auto e = dynamic_cast<link_base*>(item))
+            {
+                if (auto menu = e->context_menu_requested())
+                {
+                    menu->exec(event->globalPos());
+                }
+            }
+        }
     }
     else
     {
@@ -148,62 +152,62 @@ void node_editor_view::mousePressEvent(QMouseEvent* event)
     }
 }
 
-void node_editor_view::mouseMoveEvent(QMouseEvent* event)
+void flow_char_view_base::mouseMoveEvent(QMouseEvent* event)
 {
-    if(_currently_created_link)
+    if (_currently_created_link)
     {
-        auto p = dynamic_cast<node_editor::pin*>(itemAt(event->pos()));
-        if (p && p != _currently_created_link_pin && p->direction() != _currently_created_link_pin->direction())
+        auto p = dynamic_cast<pin_base*>(itemAt(event->pos()));
+        if (p && p->can_connect_to(_currently_created_link_pin))
         {
-            if (_currently_created_link_pin->direction() == node_editor::pin_direction::input)
+            if (_currently_created_link_pin->direction() == pin_direction::input)
             {
                 _currently_created_link->set_from_point(p->pin_pos());
             }
-            else if (_currently_created_link_pin->direction() == node_editor::pin_direction::output)
+            else if (_currently_created_link_pin->direction() == pin_direction::output)
             {
                 _currently_created_link->set_to_point(p->pin_pos());
             }
         }
         else
         {
-            if (_currently_created_link_pin->direction() == node_editor::pin_direction::input)
+            if (_currently_created_link_pin->direction() == pin_direction::input)
             {
                 _currently_created_link->set_from_point(mapToScene(event->pos()));
                 _currently_created_link->set_from_pin(nullptr);
             }
-            else if (_currently_created_link_pin->direction() == node_editor::pin_direction::output)
+            else if (_currently_created_link_pin->direction() == pin_direction::output)
             {
                 _currently_created_link->set_to_point(mapToScene(event->pos()));
                 _currently_created_link->set_to_pin(nullptr);
             }
         }
     }
-    if(event->buttons() & Qt::MouseButton::LeftButton)
+    if (event->buttons() & Qt::MouseButton::LeftButton)
     {
-        for(auto& item : scene()->selectedItems())
+        for (auto& item : scene()->selectedItems())
         {
-            if(auto n = dynamic_cast<node_editor::node*>(item))
+            if (auto n = dynamic_cast<node_base*>(item))
             {
-                for(auto& i_p : n->pins(node_editor::pin_direction::input))
+                for (auto& i_p : n->pins(pin_direction::input))
                 {
                     for (auto& l : i_p->links())
                     {
-                        l->update_link();
+                        l->update_link_geometry();
                     }
                 }
-                for (auto& o_p : n->pins(node_editor::pin_direction::output))
+                for (auto& o_p : n->pins(pin_direction::output))
                 {
-                    for(auto& l : o_p->links())
+                    for (auto& l : o_p->links())
                     {
-                        l->update_link();
+                        l->update_link_geometry();
                     }
                 }
             }
         }
     }
-    if(event->buttons() & Qt::MouseButton::RightButton)
+    if (event->buttons() & Qt::MouseButton::RightButton)
     {
-        if(!_selection_rubber_band.isHidden())
+        if (!_selection_rubber_band.isHidden())
         {
             auto delta = event->pos() - _selection_origin;
             QRect area = QRect(_selection_origin, QSize(delta.x(), delta.y())).normalized();
@@ -225,42 +229,50 @@ void node_editor_view::mouseMoveEvent(QMouseEvent* event)
     }
 }
 
-void node_editor_view::mouseReleaseEvent(QMouseEvent * event)
+void flow_char_view_base::mouseReleaseEvent(QMouseEvent * event)
 {
     if (event->button() == Qt::MouseButton::RightButton)
     {
         _selection_rubber_band.hide();
         event->accept();
     }
-    
+
     QGraphicsView::mouseReleaseEvent(event);
 
     viewport()->setCursor(Qt::CursorShape::ArrowCursor);
     setCursor(Qt::CursorShape::ArrowCursor);
 }
 
-void node_editor_view::keyPressEvent(QKeyEvent* event)
+void flow_char_view_base::keyPressEvent(QKeyEvent* event)
 {
-    if(event->key() == Qt::Key::Key_Delete)
+    if (event->key() == Qt::Key::Key_Delete)
     {
         for (auto& item : scene()->selectedItems())
         {
-            if (auto e = dynamic_cast<node_editor::link*>(item))
+            if (auto e = dynamic_cast<link_base*>(item))
             {
-                delete e;
+                if (e->removable())
+                {
+                    e->about_to_remove();
+                    delete e;
+                }
             }
         }
         for (auto& item : scene()->selectedItems())
         {
-            if (auto n = dynamic_cast<node_editor::node*>(item))
+            if (auto n = dynamic_cast<node_base*>(item))
             {
-                delete n;
+                if(n->removable())
+                {
+                    n->about_to_remove();
+                    delete n;
+                }
             }
         }
     }
 }
 
-void node_editor_view::enterEvent(QEvent * event)
+void flow_char_view_base::enterEvent(QEvent * event)
 {
     QGraphicsView::enterEvent(event);
 
@@ -268,38 +280,4 @@ void node_editor_view::enterEvent(QEvent * event)
     setCursor(Qt::CursorShape::ArrowCursor);
 }
 
-void node_editor_scene::drawBackground(QPainter* painter, const QRectF& rect)
-{
-    painter->fillRect(rect, QColor(105, 105, 105));
-
-    constexpr float separation_thicker = 100.0f;
-    constexpr float separation_thinner = 25.0f;
-    QPointF start_thick = QPointF(qFloor(rect.left() / separation_thicker) * separation_thicker, qFloor(rect.top() / separation_thicker) * separation_thicker);
-    QPointF start_thin = QPointF(qFloor(rect.left() / separation_thinner) * separation_thinner, qFloor(rect.top() / separation_thinner) * separation_thinner);
-
-    QPen pen_thick;
-    pen_thick.setWidthF(3);
-    pen_thick.setColor(QColor(169, 169, 169, 127));
-    painter->setPen(pen_thick);
-    for (float current_thick_x = start_thick.x(); current_thick_x < rect.right(); current_thick_x += separation_thicker)
-    {
-        painter->drawLine(QPointF(current_thick_x, rect.top()), QPointF(current_thick_x, rect.bottom()));
-    }
-    for (float current_thick_y = start_thick.y(); current_thick_y < rect.bottom(); current_thick_y += separation_thicker)
-    {
-        painter->drawLine(QPointF(rect.left(), current_thick_y), QPointF(rect.right(), current_thick_y));
-    }
-
-    QPen pen_thin;
-    pen_thick.setWidthF(1);
-    pen_thick.setColor(QColor(192, 192, 192, 127));
-    painter->setPen(pen_thick);
-    for (float current_thin_x = start_thin.x(); current_thin_x < rect.right(); current_thin_x += separation_thinner)
-    {
-        painter->drawLine(QPointF(current_thin_x, rect.top()), QPointF(current_thin_x, rect.bottom()));
-    }
-    for (float current_thin_y = start_thick.y(); current_thin_y < rect.bottom(); current_thin_y += separation_thinner)
-    {
-        painter->drawLine(QPointF(rect.left(), current_thin_y), QPointF(rect.right(), current_thin_y));
-    }
-}
+FLOW_CHART_NAMESPACE_END

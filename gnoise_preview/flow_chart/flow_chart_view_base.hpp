@@ -1,22 +1,18 @@
 #pragma once
 
-#include <QtWidgets>
-#include "node_editor/node_model/link.hpp"
+#include "flow_chart_base/node_base.hpp"
+#include "flow_chart_base/pin_base.hpp"
+#include "flow_chart_base/link_base.hpp"
 
-class node_editor_scene : public QGraphicsScene
+FLOW_CHART_NAMESPACE_BEGIN
+
+class flow_char_view_base : public QGraphicsView
 {
     Q_OBJECT
 public:
-    node_editor_scene(QObject* parent = nullptr);
+    flow_char_view_base(QWidget* parent = nullptr);
 protected:
-    virtual void drawBackground(QPainter *painter, const QRectF &rect) override;
-};
-
-class node_editor_view : public QGraphicsView
-{
-    Q_OBJECT
-public:
-    node_editor_view(QWidget* parent = nullptr);
+    virtual link_base*          create_link() const = 0;
 protected:
     virtual void                mousePressEvent(QMouseEvent* event) override;
     virtual void                mouseMoveEvent(QMouseEvent* event) override;
@@ -26,6 +22,8 @@ protected:
 private:
     QRubberBand                 _selection_rubber_band;
     QPoint                      _selection_origin;
-    node_editor::link*          _currently_created_link = nullptr;
-    node_editor::pin*           _currently_created_link_pin;
+    link_base*                  _currently_created_link = nullptr;
+    pin_base*                   _currently_created_link_pin;
 };
+
+FLOW_CHART_NAMESPACE_END
