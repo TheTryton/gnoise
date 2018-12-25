@@ -148,6 +148,21 @@ result_node::result_node(QGraphicsWidget* parent) :
     auto compute_button = new result_node_compute_button;
     _root_layout->addItem(compute_button);
     _root_layout->setAlignment(compute_button, Qt::AlignHCenter);
+    auto time_taken = new QLabel;
+    QFont font;
+    font.setPointSize(18);
+    time_taken->setFont(font);
+    time_taken->setMinimumHeight(40);
+    time_taken->setAlignment(Qt::AlignCenter);
+    time_taken->setStyleSheet(
+        "QWidget{\n"
+        "   background-color: rgb(72, 74, 82);\n"
+        "   color: white;\n"
+        "}\n"
+    );
+    auto time_taken_proxy = new QGraphicsProxyWidget;
+    time_taken_proxy->setWidget(time_taken);
+    _root_layout->addItem(time_taken_proxy);
     auto image = new result_node_image;
     _root_layout->addItem(image);
     _root_layout->setAlignment(image, Qt::AlignHCenter);
@@ -169,7 +184,7 @@ result_node::result_node(QGraphicsWidget* parent) :
             auto end = high_resolution_clock::now();
             if (!values.empty())
             {
-                qDebug() << (end - start).count() / 1e9 << "s";
+                time_taken->setText("Time taken: " + QString::number((end - start).count() / 1e9) + "s");
 
                 QImage pm = QImage((int)b.dimension_precision<0>(), (int)b.dimension_precision<1>(), QImage::Format::Format_RGBA8888);
 
@@ -209,8 +224,12 @@ result_node::result_node(QGraphicsWidget* parent) :
             }
             else
             {
-                qDebug() << "failed to calculate noise values";
+                time_taken->setText("Failed to calculate noise values");
             }
+        }
+        else
+        {
+            time_taken->setText("No input module");
         }
     });
 }
