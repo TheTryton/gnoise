@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.hpp"
+#include <QtWidgets>
 
 #define FLOW_CHART flow_chart
 #define FLOW_CHART_NAMESPACE_BEGIN namespace FLOW_CHART{

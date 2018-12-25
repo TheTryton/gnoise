@@ -2,16 +2,6 @@
 
 GNOISE_NAMESPACE_BEGIN
 
-inline float noise_clamp_module::lower_bound() const
-{
-    return _lower_bound;
-}
-
-inline float noise_clamp_module::upper_bound() const
-{
-    return _upper_bound;
-}
-
 void noise_clamp_module::set_lower_bound(float lower_bound)
 {
     _lower_bound = lower_bound;

@@ -61,13 +61,6 @@ public:
     void                                            set_control_module(const noise_module* control_module);
     void                                            set_first_input_module(const noise_module* first_input_module);
     void                                            set_second_input_module(const noise_module* second_input_module);
-
-    virtual float                                   compute(const vector1f& point) const override;
-    virtual float                                   compute(const vector2f& point) const override;
-    virtual float                                   compute(const vector3f& point) const override;
-    virtual float                                   compute(const vector4f& point) const override;
-private:
-    bool                                            check_input_modules_validity() const;
 private:
     float                                           _falloff = default_select_falloff;
     float                                           _min = default_select_min;

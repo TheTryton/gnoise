@@ -19,9 +19,14 @@ class noise_clamp_module : public noise_modifier_module_base<1, clamp, noise_cla
 public:
     noise_clamp_module() noexcept = default;
 public:
-
-    inline float                                    lower_bound() const;
-    inline float                                    upper_bound() const;
+    inline float                                    lower_bound() const
+    {
+        return _lower_bound;
+    }
+    inline float                                    upper_bound() const
+    {
+        return _upper_bound;
+    }
     void                                            set_lower_bound(float lower_bound);
     void                                            set_upper_bound(float upper_bound);
 private:

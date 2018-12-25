@@ -37,11 +37,22 @@ size_t pin_base::links_count() const
     return _links.size();
 }
 
-void pin_base::about_to_remove()
+void pin_base::set_created_link_pin(pin_base* other)
+{
+    _created_link_pin = other;
+    update();
+}
+
+pin_base* pin_base::created_link_pin() const
+{
+    return _created_link_pin;
+}
+
+void pin_base::about_to_be_removed()
 {
     for (auto& link : _links)
     {
-        link->about_to_remove();
+        link->about_to_be_removed();
         delete link;
     }
 }
@@ -71,7 +82,7 @@ void pin_base::_disconnect_delete(link_base* link)
     if(it != _links.end())
     {
         auto link = *it;
-        link->about_to_remove();
+        link->about_to_be_removed();
         delete link;
     }
 }

@@ -8,12 +8,14 @@ default_link::default_link(QGraphicsItem* parent) :
 {
     setAcceptHoverEvents(true);
     setFlag(ItemSendsGeometryChanges);
+    setFlag(ItemIsSelectable);
 }
 
-QMenu* default_link::context_menu_requested() const
+QMenu* default_link::context_menu_requested()
 {
     QMenu* menu = new QMenu;
     menu->addAction("Delete link", [=]() {
+        about_to_be_removed();
         delete this;
     });
     return menu;
@@ -26,14 +28,10 @@ bool default_link::removable() const
 
 void default_link::on_connection_established()
 {
-    setFlag(ItemIsSelectable, true);
-    qDebug() << "connection established link: " << this;
 }
 
 void default_link::on_connection_broken()
 {
-    setFlag(ItemIsSelectable, false);
-    qDebug() << "connection broken link: " << this;
 }
 
 QRectF default_link::boundingRect() const
@@ -69,9 +67,16 @@ void default_link::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
         }
     }
 
-    stroke.setWidth(4);
-
-    painter->fillPath(stroke.createStroke(path), QColor(220, 220, 220));
+    if (can_be_created())
+    {
+        stroke.setWidth(4);
+        painter->fillPath(stroke.createStroke(path), QColor(126, 252, 127));
+    }
+    else
+    {
+        stroke.setWidth(4);
+        painter->fillPath(stroke.createStroke(path), QColor(239, 240, 240));
+    }
 }
 
 QPainterPath default_link::get_link_path_unstroked() const

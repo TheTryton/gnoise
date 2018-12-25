@@ -18,10 +18,10 @@ public:
     size_t                          links_count() const;
     std::vector<link_base*>         links() const;
 
-    virtual QMenu*                  context_menu_requested() const = 0;
+    virtual QMenu*                  context_menu_requested() = 0;
     virtual bool                    removable() const = 0;
 public:
-    void                            about_to_remove();
+    void                            about_to_be_removed();
 protected:
     void                            _set_pin_parent_to_this(pin_base* p);
 };

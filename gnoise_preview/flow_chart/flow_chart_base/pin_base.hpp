@@ -12,6 +12,7 @@ public:
 private:
     std::vector<link_base*> _links;
     node_base*              _parent_node = nullptr;
+    pin_base*               _created_link_pin = nullptr;
 public:
     pin_base(QGraphicsWidget* parent = nullptr);
     ~pin_base();
@@ -26,11 +27,14 @@ public:
     std::vector<link_base*> links() const;
     size_t                  links_count() const;
 
+    void                    set_created_link_pin(pin_base* other);
+    pin_base*               created_link_pin() const;
+
     virtual void            on_connected(link_base* l) = 0;
     virtual void            on_disconnected(link_base* l) = 0;
     virtual bool            can_connect_to(pin_base* other) const = 0;
 public:
-    void                    about_to_remove();
+    void                    about_to_be_removed();
 private:
     void                    _connect(link_base* link);
     void                    _disconnect_no_delete(link_base* link);

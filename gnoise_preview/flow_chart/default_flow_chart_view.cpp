@@ -8,7 +8,6 @@ default_flow_chart_view::default_flow_chart_view(QWidget* parent) :
     flow_char_view_base(parent)
 {
     setScene(new default_flow_chart_scene);
-    scene()->setSceneRect(QRectF(-1000.0, -1000.0, 2000.0, 2000.0));
 }
 
 link_base* default_flow_chart_view::create_link() const

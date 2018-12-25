@@ -33,6 +33,7 @@ multithreaded_target_configuration& multithreaded_target_configuration::operator
 multithreaded_target_configuration& multithreaded_target_configuration::operator=(multithreaded_target_configuration&& other) noexcept
 {
     _percentage_affinity = other._percentage_affinity;
+    _configuration = other._configuration;
     _configuration->post_changes();
     return *this;
 }

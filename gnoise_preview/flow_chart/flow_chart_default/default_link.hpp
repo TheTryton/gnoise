@@ -5,12 +5,12 @@
 
 FLOW_CHART_NAMESPACE_BEGIN
 
-class default_link final : public link_base
+class default_link : public link_base
 {
 public:
     default_link(QGraphicsItem* parent = nullptr);
 public:
-    virtual QMenu*          context_menu_requested() const override;
+    virtual QMenu*          context_menu_requested() override;
     virtual bool            removable() const override;
     virtual void            on_connection_established() override;
     virtual void            on_connection_broken() override;

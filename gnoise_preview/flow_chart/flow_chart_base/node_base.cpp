@@ -22,9 +22,9 @@ size_t node_base::links_count() const
     return l_count;
 }
 
-vector<link_base*> node_base::links() const
+std::vector<link_base*> node_base::links() const
 {
-    vector<link_base*> ls;
+    std::vector<link_base*> ls;
     for (auto& p : pins(pin_direction::input))
     {
         auto p_ls = p->links();
@@ -38,15 +38,15 @@ vector<link_base*> node_base::links() const
     return ls;
 }
 
-void node_base::about_to_remove()
+void node_base::about_to_be_removed()
 {
     for(auto& pin : pins(pin_direction::input))
     {
-        pin->about_to_remove();
+        pin->about_to_be_removed();
     }
     for (auto& pin : pins(pin_direction::output))
     {
-        pin->about_to_remove();
+        pin->about_to_be_removed();
     }
 }
 

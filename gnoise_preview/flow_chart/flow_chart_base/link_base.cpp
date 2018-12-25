@@ -93,12 +93,26 @@ void link_base::set_to_point(const QPointF& to)
     _to_point = to;
 }
 
+void link_base::set_can_be_created(bool can_be_created)
+{
+    if(_can_be_created != can_be_created)
+    {
+        _can_be_created = can_be_created;
+        update();
+    }
+}
+
+bool link_base::can_be_created() const
+{
+    return _can_be_created;
+}
+
 void link_base::update_link_geometry()
 {
     prepareGeometryChange();
 }
 
-void link_base::about_to_remove()
+void link_base::about_to_be_removed()
 {
     if (_from && _to)
     {

@@ -222,27 +222,29 @@ void default_node::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
 
     if(isSelected())
     {
-        painter->setBrush(QColor(255, 165, 0));
+        painter->setBrush(QColor(255, 165, 0, 210));
         QPainterPath selected_path;
         selected_path.addRoundedRect(layout()->geometry(), 10, 10);
         painter->drawPath(selected_path.subtracted(node_path));
     }
     else if (option->state & QStyle::StateFlag::State_MouseOver)
     {
-        painter->setBrush(QColor(135, 206, 250));
+        painter->setBrush(QColor(135, 206, 250, 210));
         QPainterPath hovered_path;
         hovered_path.addRoundedRect(layout()->geometry(), 10, 10);
         painter->drawPath(hovered_path.subtracted(node_path));
     }
-    painter->setPen(QColor(180, 180, 180, 160));
-    painter->setBrush(QColor(127, 127, 127, 160));
+    
+    painter->setPen(QColor(111, 112, 113, 210));
+    painter->setBrush(QColor(37, 37, 38, 210));
     painter->drawPath(node_path);
 }
 
-QMenu* default_node::context_menu_requested() const
+QMenu* default_node::context_menu_requested()
 {
     QMenu* menu = new QMenu;
     menu->addAction("Delete node", [=]() {
+        about_to_be_removed();
         delete this;
     });
     return menu;

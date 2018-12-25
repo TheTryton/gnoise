@@ -9,14 +9,6 @@ set(CMAKE_AUTOUIC ON)
 
 set(gnoise_preview_Sources
 	main.cpp
-    WND.hpp
-    common.hpp
-
-    models/module_models.hpp
-    models/module_models.cpp
-
-    delegates/additional_delegates.hpp
-    delegates/additional_delegates.cpp
 
     flow_chart/flow_chart_common.hpp
     flow_chart/flow_chart_view_base.hpp
@@ -39,6 +31,34 @@ set(gnoise_preview_Sources
     flow_chart/flow_chart_default/default_link.cpp
     flow_chart/flow_chart_default/default_pin.hpp
     flow_chart/flow_chart_default/default_pin.cpp
+
+    preview_flow_chart/preview_common.hpp
+
+    preview_flow_chart/preview_base/preview_node_base.hpp
+    preview_flow_chart/preview_base/preview_node_base.cpp
+    preview_flow_chart/preview_base/preview_pin_base.hpp
+    preview_flow_chart/preview_base/preview_pin_base.cpp
+    preview_flow_chart/preview_base/preview_node_title.hpp
+    preview_flow_chart/preview_base/preview_node_title.cpp
+
+    preview_flow_chart/module_data/module_data.hpp
+    preview_flow_chart/module_data/module_data.cpp
+
+    preview_flow_chart/module_model/module_model.hpp
+    preview_flow_chart/module_model/module_model.cpp
+
+    preview_flow_chart/module_nodes/module_nodes.hpp
+
+    preview_flow_chart/result_node/result_node.hpp
+    preview_flow_chart/result_node/result_node.cpp
+    preview_flow_chart/result_node/result_node_image.hpp
+    preview_flow_chart/result_node/result_node_image.cpp
+
+    preview_flow_chart/view/preview_flow_chart_view.hpp
+    preview_flow_chart/view/preview_flow_chart_view.cpp
+
+    preview_flow_chart/widget/preview_widget.hpp
+    preview_flow_chart/widget/preview_widget.cpp
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${gnoise_preview_Sources})

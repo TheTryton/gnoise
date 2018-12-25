@@ -11,6 +11,7 @@ private:
     QPointF                 _to_point;
     pin_base*               _from = nullptr;
     pin_base*               _to = nullptr;
+    bool                    _can_be_created = false;
 public:
     link_base(QGraphicsItem* parent = nullptr);
     ~link_base();
@@ -26,14 +27,17 @@ public:
     void                    set_from_point(const QPointF& from);
     void                    set_to_point(const QPointF& to);
 
+    void                    set_can_be_created(bool can_be_created);
+    bool                    can_be_created() const;
+
     void                    update_link_geometry();
 
-    virtual QMenu*          context_menu_requested() const = 0;
+    virtual QMenu*          context_menu_requested() = 0;
     virtual bool            removable() const = 0;
     virtual void            on_connection_established() = 0;
     virtual void            on_connection_broken() = 0;
 public:
-    void                    about_to_remove();
+    void                    about_to_be_removed();
 private:
     void                    _on_connection_established();
     void                    _on_connection_broken();
