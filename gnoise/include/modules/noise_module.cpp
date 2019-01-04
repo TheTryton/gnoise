@@ -34,7 +34,6 @@ multithreaded_target_configuration& multithreaded_target_configuration::operator
 {
     _percentage_affinity = other._percentage_affinity;
     _configuration = other._configuration;
-    _configuration->post_changes();
     return *this;
 }
 
@@ -122,6 +121,7 @@ noise_module_configuration& noise_module_configuration::operator=(const noise_mo
         }
         break;
     }
+    post_changes();
     return *this;
 }
 
