@@ -1,5 +1,5 @@
 # gnoise
-GPU Accelerated C++ Noise Library (successor to QuickNoise). 
+GPU Accelerated C++ Noise Library. 
 
 A modified version of [libnoise](http://libnoise.sourceforge.net/).
 
