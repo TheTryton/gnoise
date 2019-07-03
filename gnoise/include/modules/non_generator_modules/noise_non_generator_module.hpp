@@ -562,7 +562,10 @@ public:
 protected:
     virtual void                                    on_configuration_changed() override
     {
-
+        if (configuration().computation_target() == module_computation_target::gpu)
+        {
+            configuration().set_computation_target(module_computation_target::mtcpu);
+        }
     }
 private:
     bool                                            check_input_modules_validity() const
