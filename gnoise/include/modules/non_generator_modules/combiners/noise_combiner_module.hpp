@@ -7,7 +7,6 @@ GNOISE_NAMESPACE_BEGIN
 template<size_t I_C, class F, class D>
 using noise_combiner_module_base = noise_non_generator_module_def_impl<I_C, F, D, module_type::combiner>;
 
-//trivial combiners
 class noise_add_module;
 class noise_subtract_module;
 class noise_multiply_module;

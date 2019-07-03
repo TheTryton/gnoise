@@ -143,7 +143,7 @@ namespace transformer_utility
 
             for (size_t j = 0; j < D; j++)
             {
-                coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j]);
+                coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j] - 1);
             }
 
             points[i] = coords;
@@ -175,7 +175,7 @@ namespace transformer_utility
 
             for (size_t j = 0; j < D; j++)
             {
-                coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j]);
+                coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j] - 1);
             }
 
             points[i] = coords;

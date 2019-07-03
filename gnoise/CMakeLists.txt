@@ -4,8 +4,6 @@ project(gnoise)
 find_package(OpenCL REQUIRED)
 
 set(gnoise_Sources
-	main.cpp
-
 	include/common.hpp
 	include/gnoise.hpp
 
@@ -81,7 +79,6 @@ set(gnoise_Sources
     include/modules/non_generator_modules/selectors/select/noise_select_module.cpp
     include/modules/non_generator_modules/selectors/blend/noise_blend_module.hpp
     include/modules/non_generator_modules/selectors/blend/noise_blend_module.cpp
-
 )
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${gnoise_Sources})

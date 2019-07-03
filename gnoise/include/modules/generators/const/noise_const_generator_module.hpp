@@ -24,7 +24,7 @@ public:
     virtual vector<float>                           compute(const range3f& range, const precision3& precision) const override;
     virtual vector<float>                           compute(const range4f& range, const precision4& precision) const override;
 
-    inline float                                           const_value() const
+    inline float                                    const_value() const
     {
         return _const_value;
     }

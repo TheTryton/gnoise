@@ -474,7 +474,7 @@ namespace generator_utility
 
             for (size_t j = 0; j < D; j++)
             {
-                coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j]);
+                coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j] - 1);
             }
 
             for (size_t j = 0; j < D; j++)
@@ -526,7 +526,7 @@ namespace generator_utility
 
                     for (size_t j = 0; j < D; j++)
                     {
-                        coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j]);
+                        coords.coords[j] = coord_prec[j] / static_cast<float>(precision[j] - 1);
                     }
 
                     for (size_t j = 0; j < D; j++)
@@ -918,7 +918,7 @@ protected:
                     {
                         return;
                     }
-                    _gpu_command_queue = clCreateCommandQueueWithProperties(_gpu_context, target_device, nullptr, nullptr);
+                    _gpu_command_queue = clCreateCommandQueue(_gpu_context, target_device, cl_command_queue_properties(), nullptr);
                     if (_gpu_command_queue == nullptr)
                     {
                         return;
@@ -1044,7 +1044,7 @@ private:
 
         //result and points buffers
 
-        auto results_count = std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<unsigned long long int>());
+        size_t results_count = std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<size_t>());
 
         cl_mem buffer_results = clCreateBuffer(_gpu_context, CL_MEM_READ_WRITE, sizeof(float) * results_count, nullptr, nullptr);
 

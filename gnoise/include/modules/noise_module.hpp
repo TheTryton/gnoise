@@ -126,6 +126,7 @@ class noise_module
     friend class noise_module_configuration;
 protected:
     noise_module() noexcept;
+public:
     virtual ~noise_module() = default;
 public:
     noise_module(const noise_module&) = delete;
