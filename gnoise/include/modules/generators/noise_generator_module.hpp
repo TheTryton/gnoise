@@ -556,6 +556,71 @@ public:
     virtual gnoise::module_type                     module_type() const override;
 };
 
+class noise_generator_module_gpu_manager
+{
+private:
+    static std::map<cl_device_id, std::weak_ptr<cl_context>>        _device_contexts;
+    static std::map<cl_device_id, std::weak_ptr<cl_command_queue>>  _device_command_queues;
+public:
+    static std::shared_ptr<cl_context> get_device_context(cl_device_id device)
+    {
+        auto context_it = _device_contexts.find(device);
+
+        if (context_it != _device_contexts.end())
+        {
+            if (auto context = context_it->second.lock())
+            {
+                return context;
+            }
+            else
+            {
+                _device_contexts.erase(context_it);
+            }
+        }
+
+        std::shared_ptr<cl_context> context = std::shared_ptr<cl_context>(
+            new cl_context(clCreateContext(nullptr, 1, &device, nullptr, nullptr, nullptr)),
+            [](cl_context* context) {
+                clReleaseContext(*context);
+                delete context;
+            });
+
+        _device_contexts[device] = context;
+
+        return context;
+    }
+
+    static std::shared_ptr<cl_command_queue> get_device_command_queue(cl_device_id device)
+    {
+        auto command_queue_it = _device_command_queues.find(device);
+
+        if (command_queue_it != _device_command_queues.end())
+        {
+            if (auto command_queue = command_queue_it->second.lock())
+            {
+                return command_queue;
+            }
+            else
+            {
+                _device_command_queues.erase(command_queue_it);
+            }
+        }
+
+        std::shared_ptr<cl_command_queue> command_queue = std::shared_ptr<cl_command_queue>(
+            new cl_command_queue(clCreateCommandQueue(*get_device_context(device), device, cl_command_queue_properties(), nullptr)),
+            [](cl_command_queue* command_queue) {
+                clFlush(*command_queue);
+                clFinish(*command_queue);
+                clReleaseCommandQueue(*command_queue);
+                delete command_queue;
+            });
+
+        _device_command_queues[device] = command_queue;
+
+        return command_queue;
+    }
+};
+
 template<class F, class D>
 class noise_generator_module_def_impl : public noise_generator_module_base
 {
@@ -598,19 +663,6 @@ protected:
                 clReleaseProgram(p);
                 p = nullptr;
             }
-        }
-
-        if (_gpu_command_queue)
-        {
-            clFlush(_gpu_command_queue);
-            clFinish(_gpu_command_queue);
-            clReleaseCommandQueue(_gpu_command_queue);
-            _gpu_command_queue = nullptr;
-        }
-        if (_gpu_context)
-        {
-            clReleaseContext(_gpu_context);
-            _gpu_context = nullptr;
         }
     }
 public:
@@ -859,7 +911,7 @@ public:
 protected:
     virtual void                                    on_configuration_changed() override
     {
-        for(auto& k : _gpu_program_kernels_points)
+        for (auto& k : _gpu_program_kernels_points)
         {
             if (k)
             {
@@ -893,18 +945,8 @@ protected:
             }
         }
 
-        if (_gpu_command_queue)
-        {
-            clFlush(_gpu_command_queue);
-            clFinish(_gpu_command_queue);
-            clReleaseCommandQueue(_gpu_command_queue);
-            _gpu_command_queue = nullptr;
-        }
-        if(_gpu_context)
-        {
-            clReleaseContext(_gpu_context);
-            _gpu_context = nullptr;
-        }
+        _gpu_command_queue.reset();
+        _gpu_context.reset();
         
         if(configuration().computation_target() == module_computation_target::gpu)
         {
@@ -913,18 +955,19 @@ protected:
                 auto target_device = gpu_config->target();
                 if(target_device != nullptr)
                 {
-                    _gpu_context = clCreateContext(nullptr, 1, &target_device, nullptr, nullptr, nullptr);
-                    if(_gpu_context == nullptr)
+                    _gpu_context = noise_generator_module_gpu_manager::get_device_context(target_device);
+                    if(*_gpu_context == nullptr)
                     {
                         return;
                     }
-                    _gpu_command_queue = clCreateCommandQueue(_gpu_context, target_device, cl_command_queue_properties(), nullptr);
-                    if (_gpu_command_queue == nullptr)
+                    _gpu_command_queue = noise_generator_module_gpu_manager::get_device_command_queue(target_device);
+                    if (*_gpu_command_queue == nullptr)
                     {
                         return;
                     }
+
                     F::create_kernels(
-                        target_device, _gpu_context,
+                        target_device, *_gpu_context,
                         _gpu_programs_points,
                         _gpu_program_kernels_points,
                         _gpu_programs_ranges,
@@ -938,7 +981,7 @@ private:
     template<unsigned int DIM>
     inline vector<float>                            compute_gpu_points(const vector<vectorf<DIM>>& points) const
     {
-        if(!_gpu_context || !_gpu_command_queue || !_gpu_program_kernels_points[DIM-1])
+        if(!*_gpu_context || !*_gpu_command_queue || !_gpu_program_kernels_points[DIM-1])
         {
             return vector<float>();
         }
@@ -948,36 +991,36 @@ private:
 
         //passing settings to gpu
 
-        cl_mem buffer_randoms = clCreateBuffer(_gpu_context, CL_MEM_READ_ONLY, sizeof(float) * generator_utility::randoms.size(), nullptr, nullptr);
-        cl_mem buffer_generator_defaults = clCreateBuffer(_gpu_context, CL_MEM_READ_ONLY, sizeof(int) * (generator_utility::generator_noise.size() + 2), nullptr, nullptr);
-        cl_mem buffer_module_config_f = clCreateBuffer(_gpu_context, CL_MEM_READ_ONLY, sizeof(float) * module_config_f.size(), nullptr, nullptr);
-        cl_mem buffer_module_config_i = clCreateBuffer(_gpu_context, CL_MEM_READ_ONLY, sizeof(int) * module_config_i.size(), nullptr, nullptr);
+        cl_mem buffer_randoms = clCreateBuffer(*_gpu_context, CL_MEM_READ_ONLY, sizeof(float) * generator_utility::randoms.size(), nullptr, nullptr);
+        cl_mem buffer_generator_defaults = clCreateBuffer(*_gpu_context, CL_MEM_READ_ONLY, sizeof(int) * (generator_utility::generator_noise.size() + 2), nullptr, nullptr);
+        cl_mem buffer_module_config_f = clCreateBuffer(*_gpu_context, CL_MEM_READ_ONLY, sizeof(float) * module_config_f.size(), nullptr, nullptr);
+        cl_mem buffer_module_config_i = clCreateBuffer(*_gpu_context, CL_MEM_READ_ONLY, sizeof(int) * module_config_i.size(), nullptr, nullptr);
 
         array<int, generator_utility::generator_noise.size() + 2> generator_defaults;
         std::copy(generator_utility::generator_noise.begin(), generator_utility::generator_noise.end(), generator_defaults.begin());
         generator_defaults[generator_defaults.size() - 2] = generator_utility::generator_seed;
         generator_defaults[generator_defaults.size() - 1] = generator_utility::generator_shift;
 
-        clEnqueueWriteBuffer(_gpu_command_queue, buffer_randoms, CL_FALSE, 0, 
+        clEnqueueWriteBuffer(*_gpu_command_queue, buffer_randoms, CL_FALSE, 0,
             sizeof(float) * generator_utility::randoms.size(), generator_utility::randoms.data(), 0, nullptr, nullptr);
-        clEnqueueWriteBuffer(_gpu_command_queue, buffer_generator_defaults, CL_FALSE, 0,
+        clEnqueueWriteBuffer(*_gpu_command_queue, buffer_generator_defaults, CL_FALSE, 0,
             sizeof(int) * (generator_utility::generator_noise.size() + 2), generator_defaults.data(), 0, nullptr, nullptr);
-        clEnqueueWriteBuffer(_gpu_command_queue, buffer_module_config_f, CL_FALSE, 0,
+        clEnqueueWriteBuffer(*_gpu_command_queue, buffer_module_config_f, CL_FALSE, 0,
             sizeof(float) * module_config_f.size(), module_config_f.data(), 0, nullptr, nullptr);
-        clEnqueueWriteBuffer(_gpu_command_queue, buffer_module_config_i, CL_FALSE, 0,
+        clEnqueueWriteBuffer(*_gpu_command_queue, buffer_module_config_i, CL_FALSE, 0,
             sizeof(int) * module_config_i.size(), module_config_i.data(), 0, nullptr, nullptr);
 
         //result and points buffers
 
-        cl_mem buffer_results = clCreateBuffer(_gpu_context, CL_MEM_READ_WRITE, sizeof(float) * points.size(), nullptr, nullptr);
-        cl_mem buffer_points = clCreateBuffer(_gpu_context, CL_MEM_READ_ONLY, sizeof(vectorf<DIM>) * points.size(), nullptr, nullptr);
+        cl_mem buffer_results = clCreateBuffer(*_gpu_context, CL_MEM_READ_WRITE, sizeof(float) * points.size(), nullptr, nullptr);
+        cl_mem buffer_points = clCreateBuffer(*_gpu_context, CL_MEM_READ_ONLY, sizeof(vectorf<DIM>) * points.size(), nullptr, nullptr);
 
-        clEnqueueWriteBuffer(_gpu_command_queue, buffer_points, CL_FALSE, 0,
+        clEnqueueWriteBuffer(*_gpu_command_queue, buffer_points, CL_FALSE, 0,
             sizeof(vectorf<DIM>) * points.size(), points.data(), 0, nullptr, nullptr);
 
         //wait for transfer to gpu to end
 
-        clFinish(_gpu_command_queue);
+        clFinish(*_gpu_command_queue);
 
         //set buffers to kernel arguments
 
@@ -991,12 +1034,12 @@ private:
 
         //start computation
         auto points_size = points.size();
-        clEnqueueNDRangeKernel(_gpu_command_queue, kernel, 1, nullptr, &points_size, nullptr, 0, nullptr, nullptr);
+        clEnqueueNDRangeKernel(*_gpu_command_queue, kernel, 1, nullptr, &points_size, nullptr, 0, nullptr, nullptr);
 
         //retrieve results
         vector<float> results(points.size());
 
-        clEnqueueReadBuffer(_gpu_command_queue, buffer_results, CL_TRUE, 0,
+        clEnqueueReadBuffer(*_gpu_command_queue, buffer_results, CL_TRUE, 0,
             sizeof(float) * results.size(), results.data(), 0, nullptr, nullptr);
 
         clReleaseMemObject(buffer_results);
@@ -1006,14 +1049,14 @@ private:
         clReleaseMemObject(buffer_module_config_f);
         clReleaseMemObject(buffer_module_config_i);
 
-        clFinish(_gpu_command_queue);
+        clFinish(*_gpu_command_queue);
 
         return results;
     }
     template<unsigned int DIM>
     inline vector<float>                            compute_gpu_ranges(const rangef<DIM>& range, const precision<DIM>& precision) const
     {
-        if (!_gpu_context || !_gpu_command_queue || !_gpu_program_kernels_ranges[DIM - 1])
+        if (!*_gpu_context || !*_gpu_command_queue || !_gpu_program_kernels_ranges[DIM - 1])
         {
             return vector<float>();
         }
@@ -1023,34 +1066,34 @@ private:
 
         //passing settings to gpu
 
-        cl_mem buffer_randoms = clCreateBuffer(_gpu_context, CL_MEM_READ_ONLY, sizeof(float) * generator_utility::randoms.size(), nullptr, nullptr);
-        cl_mem buffer_generator_defaults = clCreateBuffer(_gpu_context, CL_MEM_READ_ONLY, sizeof(int) * (generator_utility::generator_noise.size() + 2), nullptr, nullptr);
-        cl_mem buffer_module_config_f = clCreateBuffer(_gpu_context, CL_MEM_READ_ONLY, sizeof(float) * module_config_f.size(), nullptr, nullptr);
-        cl_mem buffer_module_config_i = clCreateBuffer(_gpu_context, CL_MEM_READ_ONLY, sizeof(int) * module_config_i.size(), nullptr, nullptr);
+        cl_mem buffer_randoms = clCreateBuffer(*_gpu_context, CL_MEM_READ_ONLY, sizeof(float) * generator_utility::randoms.size(), nullptr, nullptr);
+        cl_mem buffer_generator_defaults = clCreateBuffer(*_gpu_context, CL_MEM_READ_ONLY, sizeof(int) * (generator_utility::generator_noise.size() + 2), nullptr, nullptr);
+        cl_mem buffer_module_config_f = clCreateBuffer(*_gpu_context, CL_MEM_READ_ONLY, sizeof(float) * module_config_f.size(), nullptr, nullptr);
+        cl_mem buffer_module_config_i = clCreateBuffer(*_gpu_context, CL_MEM_READ_ONLY, sizeof(int) * module_config_i.size(), nullptr, nullptr);
 
         array<int, generator_utility::generator_noise.size() + 2> generator_defaults;
         std::copy(generator_utility::generator_noise.begin(), generator_utility::generator_noise.end(), generator_defaults.begin());
         generator_defaults[generator_defaults.size() - 2] = generator_utility::generator_seed;
         generator_defaults[generator_defaults.size() - 1] = generator_utility::generator_shift;
 
-        clEnqueueWriteBuffer(_gpu_command_queue, buffer_randoms, CL_FALSE, 0,
+        clEnqueueWriteBuffer(*_gpu_command_queue, buffer_randoms, CL_FALSE, 0,
             sizeof(float) * generator_utility::randoms.size(), generator_utility::randoms.data(), 0, nullptr, nullptr);
-        clEnqueueWriteBuffer(_gpu_command_queue, buffer_generator_defaults, CL_FALSE, 0,
+        clEnqueueWriteBuffer(*_gpu_command_queue, buffer_generator_defaults, CL_FALSE, 0,
             sizeof(int) * (generator_utility::generator_noise.size() + 2), generator_defaults.data(), 0, nullptr, nullptr);
-        clEnqueueWriteBuffer(_gpu_command_queue, buffer_module_config_f, CL_FALSE, 0,
+        clEnqueueWriteBuffer(*_gpu_command_queue, buffer_module_config_f, CL_FALSE, 0,
             sizeof(float) * module_config_f.size(), module_config_f.data(), 0, nullptr, nullptr);
-        clEnqueueWriteBuffer(_gpu_command_queue, buffer_module_config_i, CL_FALSE, 0,
+        clEnqueueWriteBuffer(*_gpu_command_queue, buffer_module_config_i, CL_FALSE, 0,
             sizeof(int) * module_config_i.size(), module_config_i.data(), 0, nullptr, nullptr);
 
         //result and points buffers
 
         size_t results_count = std::accumulate(precision.begin(), precision.end(), 1ull, std::multiplies<size_t>());
 
-        cl_mem buffer_results = clCreateBuffer(_gpu_context, CL_MEM_READ_WRITE, sizeof(float) * results_count, nullptr, nullptr);
+        cl_mem buffer_results = clCreateBuffer(*_gpu_context, CL_MEM_READ_WRITE, sizeof(float) * results_count, nullptr, nullptr);
 
         //wait for transfer to gpu to end
 
-        clFinish(_gpu_command_queue);
+        clFinish(*_gpu_command_queue);
 
         //set buffers to kernel arguments
 
@@ -1065,12 +1108,12 @@ private:
 
         //start computation
 
-        clEnqueueNDRangeKernel(_gpu_command_queue, kernel, 1, nullptr, &results_count, nullptr, 0, nullptr, nullptr);
+        clEnqueueNDRangeKernel(*_gpu_command_queue, kernel, 1, nullptr, &results_count, nullptr, 0, nullptr, nullptr);
 
         //retrieve results
         vector<float> results(results_count);
 
-        clEnqueueReadBuffer(_gpu_command_queue, buffer_results, CL_TRUE, 0,
+        clEnqueueReadBuffer(*_gpu_command_queue, buffer_results, CL_TRUE, 0,
             sizeof(float) * results_count, results.data(), 0, nullptr, nullptr);
 
         clReleaseMemObject(buffer_results);
@@ -1079,20 +1122,19 @@ private:
         clReleaseMemObject(buffer_module_config_f);
         clReleaseMemObject(buffer_module_config_i);
 
-        clFinish(_gpu_command_queue);
+        clFinish(*_gpu_command_queue);
 
         return results;
     }
 private:
-    cl_context                                      _gpu_context = nullptr;
+    std::shared_ptr<cl_context>                     _gpu_context = nullptr;
+    std::shared_ptr<cl_command_queue>               _gpu_command_queue = nullptr;
 
     mutable array<cl_program, 4>                    _gpu_programs_points = { nullptr, nullptr, nullptr, nullptr };
     mutable array<cl_kernel, 4>                     _gpu_program_kernels_points = { nullptr, nullptr, nullptr, nullptr };
 
     mutable array<cl_program, 4>                    _gpu_programs_ranges = { nullptr, nullptr, nullptr, nullptr };
     mutable array<cl_kernel, 4>                     _gpu_program_kernels_ranges = { nullptr, nullptr, nullptr, nullptr };
-
-    mutable cl_command_queue                        _gpu_command_queue = nullptr;
 };
 
 GNOISE_NAMESPACE_END

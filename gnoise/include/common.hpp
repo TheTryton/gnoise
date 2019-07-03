@@ -9,6 +9,8 @@
 #include <numeric>
 #include <thread>
 #include <array>
+#include <memory>
+#include <map>
 #include <string>
 #include <string_view>
 
